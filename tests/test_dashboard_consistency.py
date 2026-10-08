@@ -170,3 +170,4 @@ def test_high_risk_approval_dashboard_consistency():
     assert "approval_requested" in event_types
     assert "approval_approved" in event_types
     assert "recovery_completed" in event_types
+
