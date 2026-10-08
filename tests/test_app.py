@@ -7,8 +7,12 @@ risk classifications, approvals, audit logs, and timing).
 
 from __future__ import annotations
 
+import concurrent.futures
+import threading
+
 import pytest
 from fastapi.testclient import TestClient
+
 
 from app import state
 from app.graph import (
@@ -383,3 +387,171 @@ class TestMilestone2RecoveryEngine:
         assert inc["recovery_started_at"] is not None
         assert inc["recovery_completed_at"] is not None
         assert isinstance(inc["total_recovery_duration_seconds"], (int, float))
+
+    def test_action_unhandled_exception_marks_service_and_incident_failed(self, monkeypatch):
+        """If an action raises an unhandled exception, service must be marked failed and not stuck in recovering."""
+        r_fail = client.post("/simulate/fail/website")
+        incident_id = r_fail.json()["incident"]["id"]
+
+        def mock_execute_action(service, playbook):
+            raise RuntimeError("Unexpected simulated crash in action execution")
+
+        from app import playbooks
+        monkeypatch.setattr(playbooks, "execute_simulated_action", mock_execute_action)
+
+        r_rec = client.post(f"/recovery/start/{incident_id}")
+        assert r_rec.status_code == 200
+        inc = r_rec.json()["incident"]
+        assert inc["status"] == "failed"
+        assert inc["recovery_completed_at"] is not None
+        assert isinstance(inc["total_recovery_duration_seconds"], (int, float))
+
+        # Crucial invariant: Service state must NOT remain 'recovering'
+        r_srv = client.get("/services")
+        assert r_srv.json()["services"]["website"] == "failed"
+
+    def test_health_check_unhandled_exception_marks_service_and_incident_failed(self, monkeypatch):
+        """If a health check probe raises an unhandled exception, service must be marked failed."""
+        r_fail = client.post("/simulate/fail/website")
+        incident_id = r_fail.json()["incident"]["id"]
+
+        def mock_health_check(service, playbook):
+            raise ConnectionResetError("Synthetic probe socket reset")
+
+        from app import playbooks
+        monkeypatch.setattr(playbooks, "run_simulated_health_check", mock_health_check)
+
+        r_rec = client.post(f"/recovery/start/{incident_id}")
+        assert r_rec.status_code == 200
+        inc = r_rec.json()["incident"]
+        assert inc["status"] == "failed"
+        assert state.service_states["website"] == "failed"
+
+    def test_approval_decision_on_non_awaiting_incident_rejected(self):
+        """Cannot approve an action if the parent incident is not in awaiting_approval state."""
+        r_fail = client.post("/simulate/fail/database")
+        incident_id = r_fail.json()["incident"]["id"]
+        client.post(f"/recovery/start/{incident_id}")
+
+        apprv_id = client.get("/approvals/pending").json()["pending_approvals"][0]["id"]
+
+        # Manually alter incident status to something other than awaiting_approval
+        target_incident = state.get_incident(incident_id)
+        assert target_incident is not None
+        target_incident["status"] = "aborted"
+
+        r_apprv = client.post(f"/approvals/{apprv_id}/approve")
+        assert r_apprv.status_code == 400
+        assert "not awaiting approval" in r_apprv.json()["detail"]
+
+    def test_retry_failed_incident_resets_steps_and_recovers_cleanly(self):
+        """A failed incident can be retried and will reset execution pointers for a clean recovery."""
+        r_fail = client.post("/simulate/fail/website")
+        incident_id = r_fail.json()["incident"]["id"]
+
+        # Fail first attempt
+        client.post(
+            "/simulate/configure",
+            json={
+                "service": "website",
+                "action_success": False,
+                "action_error": "Temporary network timeout",
+            },
+        )
+        r_first = client.post(f"/recovery/start/{incident_id}")
+        assert r_first.json()["incident"]["status"] == "failed"
+        assert state.service_states["website"] == "failed"
+
+        # Fix condition and retry recovery on same incident
+        client.post(
+            "/simulate/configure",
+            json={
+                "service": "website",
+                "action_success": True,
+            },
+        )
+        r_retry = client.post(f"/recovery/start/{incident_id}")
+        assert r_retry.status_code == 200
+        retry_inc = r_retry.json()["incident"]
+        assert retry_inc["status"] == "resolved"
+        assert state.service_states["website"] == "healthy"
+
+    def test_concurrent_recovery_start_deterministic(self, monkeypatch):
+        """Verify that concurrent recovery-start requests are serialized:
+        one receives 200 and the concurrent in-flight request receives 409 Conflict.
+        """
+        r_fail = client.post("/simulate/fail/website")
+        incident_id = r_fail.json()["incident"]["id"]
+
+        from app import playbooks
+        action_started = threading.Event()
+        release_action = threading.Event()
+
+        original_execute_action = playbooks.execute_simulated_action
+
+        def mock_execute_action(service, playbook):
+            action_started.set()
+            release_action.wait(timeout=5.0)
+            return original_execute_action(service, playbook)
+
+        monkeypatch.setattr(playbooks, "execute_simulated_action", mock_execute_action)
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                fut1 = executor.submit(client.post, f"/recovery/start/{incident_id}")
+                assert action_started.wait(timeout=5.0), "Thread 1 did not reach action execution"
+
+                fut2 = executor.submit(client.post, f"/recovery/start/{incident_id}")
+                res2 = fut2.result(timeout=5.0)
+
+                release_action.set()
+                res1 = fut1.result(timeout=5.0)
+
+            assert res1.status_code == 200
+            assert res1.json()["incident"]["status"] == "resolved"
+            assert res2.status_code == 409
+            assert "already in progress" in res2.json()["detail"]
+        finally:
+            release_action.set()
+
+    def test_setup_exception_finalizes_incident_as_failed(self, monkeypatch):
+        """Unexpected exception during recovery setup finalizes incident as failed with audit trail."""
+        r_fail = client.post("/simulate/fail/website")
+        incident_id = r_fail.json()["incident"]["id"]
+
+        from app import graph
+        def mock_recovery_order(graph, service):
+            raise ValueError("Corrupted DAG topology encountered during setup")
+
+        monkeypatch.setattr(graph, "recovery_order", mock_recovery_order)
+
+        r_rec = client.post(f"/recovery/start/{incident_id}")
+        assert r_rec.status_code == 200
+        inc = r_rec.json()["incident"]
+        assert inc["status"] == "failed"
+        assert inc["recovery_completed_at"] is not None
+        assert isinstance(inc["total_recovery_duration_seconds"], (int, float))
+
+        # Check audit event
+        r_audit = client.get(f"/audit?incident_id={incident_id}")
+        events = r_audit.json()["audit_log"]
+        failed_events = [e for e in events if e["event_type"] == "recovery_failed"]
+        assert len(failed_events) > 0
+        assert "Recovery setup exception" in failed_events[0]["details"]["reason"]
+
+    def test_approval_decision_mismatched_pending_approval_id_rejected(self):
+        """Cannot process an approval that does not match the incident's active pending_approval_id."""
+        r_fail = client.post("/simulate/fail/database")
+        incident_id = r_fail.json()["incident"]["id"]
+        client.post(f"/recovery/start/{incident_id}")
+
+        apprv_id = client.get("/approvals/pending").json()["pending_approvals"][0]["id"]
+
+        # Manually alter incident's pending_approval_id to a different ID
+        target_incident = state.get_incident(incident_id)
+        assert target_incident is not None
+        target_incident["pending_approval_id"] = "mismatched-approval-uuid"
+
+        r_apprv = client.post(f"/approvals/{apprv_id}/approve")
+        assert r_apprv.status_code == 400
+        assert "not the active pending approval" in r_apprv.json()["detail"]

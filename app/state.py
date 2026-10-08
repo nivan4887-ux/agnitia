@@ -5,9 +5,13 @@ audit logs, and simulation overrides.
 
 from __future__ import annotations
 
+import threading
 import uuid
 from datetime import datetime, timezone
 from typing import Any
+
+# Global re-entrant lock for all state transitions and recovery orchestration
+state_lock = threading.RLock()
 
 
 def _new_state() -> dict[str, str]:
@@ -27,11 +31,13 @@ simulation_overrides: dict[str, dict[str, Any]] = {}
 def reset_state() -> None:
     """Reset all in-memory state – useful for tests."""
     global service_states, incidents, approvals, audit_log, simulation_overrides
-    service_states = _new_state()
-    incidents.clear()
-    approvals.clear()
-    audit_log.clear()
-    simulation_overrides.clear()
+    with state_lock:
+        service_states = _new_state()
+        incidents.clear()
+        approvals.clear()
+        audit_log.clear()
+        simulation_overrides.clear()
+
 
 
 def record_audit_event(
@@ -125,40 +131,41 @@ def fail_service(service_name: str) -> dict[str, Any]:
 
     Returns the created incident record.
     """
-    from app.graph import build_graph, get_downstream_dependents
+    with state_lock:
+        from app.graph import build_graph, get_downstream_dependents
 
-    graph = build_graph()
-    affected = [service_name] + get_downstream_dependents(graph, service_name)
+        graph = build_graph()
+        affected = [service_name] + get_downstream_dependents(graph, service_name)
 
-    service_states[service_name] = "failed"
-    for dep in affected:
-        if dep != service_name:
-            service_states[dep] = "degraded"
+        service_states[service_name] = "failed"
+        for dep in affected:
+            if dep != service_name:
+                service_states[dep] = "degraded"
 
-    incident_id = str(uuid.uuid4())
-    now_iso = datetime.now(timezone.utc).isoformat()
-    incident = {
-        "id": incident_id,
-        "failed_service": service_name,
-        "affected_services": affected,
-        "status": "open",  # "open" | "recovering" | "awaiting_approval" | "resolved" | "failed" | "aborted"
-        "created_at": now_iso,
-        "recovery_started_at": None,
-        "recovery_completed_at": None,
-        "total_recovery_duration_seconds": None,
-        "recovery_order": [],
-        "current_step_index": 0,
-        "recovery_steps": [],
-        "pending_approval_id": None,
-        "audit_log": [],
-    }
-    incidents.append(incident)
+        incident_id = str(uuid.uuid4())
+        now_iso = datetime.now(timezone.utc).isoformat()
+        incident = {
+            "id": incident_id,
+            "failed_service": service_name,
+            "affected_services": affected,
+            "status": "open",  # "open" | "recovering" | "awaiting_approval" | "resolved" | "failed" | "aborted"
+            "created_at": now_iso,
+            "recovery_started_at": None,
+            "recovery_completed_at": None,
+            "total_recovery_duration_seconds": None,
+            "recovery_order": [],
+            "current_step_index": 0,
+            "recovery_steps": [],
+            "pending_approval_id": None,
+            "audit_log": [],
+        }
+        incidents.append(incident)
 
-    record_audit_event(
-        incident_id=incident_id,
-        event_type="incident_created",
-        service=service_name,
-        details={"affected_services": affected},
-    )
+        record_audit_event(
+            incident_id=incident_id,
+            event_type="incident_created",
+            service=service_name,
+            details={"affected_services": affected},
+        )
 
-    return incident
+        return incident
