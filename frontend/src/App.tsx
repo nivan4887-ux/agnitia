@@ -9,7 +9,6 @@ import {
   ServiceHealth,
 } from './types';
 import { api } from './services/api';
-import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { OverviewCards } from './components/OverviewCards';
 import { DependencyGraph } from './components/DependencyGraph';
@@ -188,32 +187,28 @@ export const App: React.FC = () => {
   const currentIncident = activeIncidents.length > 0 ? activeIncidents[0] : incidents[0] || null;
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex font-['Plus_Jakarta_Sans',sans-serif]">
-      {/* 1. Left Sidebar */}
-      <Sidebar
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+      {/* Top Navigation Bar with brand identity, nav tabs, mode switchers, & telemetry */}
+      <Header
         activeNav={activeNav}
         onSelectNav={(nav) => {
           setActiveNav(nav);
           if (nav === 'overview') setActiveTab('dashboard');
         }}
         activeIncidentsCount={activeIncidents.length}
+        backendOnline={backendOnline}
+        isPolling={isPolling}
+        lastUpdated={lastUpdated}
+        onRefresh={() => fetchData()}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
       />
 
-      {/* 2. Main Content Container */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Navigation & Status Bar */}
-        <Header
-          backendOnline={backendOnline}
-          isPolling={isPolling}
-          lastUpdated={lastUpdated}
-          onRefresh={() => fetchData()}
-          activeTab={activeTab}
-          onSelectTab={setActiveTab}
-        />
-
-        {/* Alerts Container */}
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col min-w-0 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Alerts Banner Container */}
         {errorMessage && (
-          <div className="mx-6 mt-4 bg-rose-50 border border-rose-300 rounded-xl p-3.5 flex items-center justify-between shadow-xs animate-in fade-in">
+          <div className="mb-5 bg-rose-50 border border-rose-300 rounded-xl p-3.5 flex items-center justify-between shadow-xs animate-in fade-in">
             <div className="flex items-center space-x-3">
               <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
               <p className="text-xs font-medium text-rose-800">{errorMessage}</p>
@@ -228,7 +223,7 @@ export const App: React.FC = () => {
         )}
 
         {successMessage && (
-          <div className="mx-6 mt-4 bg-emerald-50 border border-emerald-300 rounded-xl p-3 flex items-center justify-between shadow-xs animate-in fade-in">
+          <div className="mb-5 bg-emerald-50 border border-emerald-300 rounded-xl p-3 flex items-center justify-between shadow-xs animate-in fade-in">
             <div className="flex items-center space-x-3">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <p className="text-xs font-medium text-emerald-800">{successMessage}</p>
@@ -243,7 +238,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Body Workspace */}
-        <main className="flex-1 p-6 space-y-5 overflow-y-auto">
+        <main className="flex-1 space-y-5">
           {activeTab === 'demo_store' ? (
             <DemoStoreView
               onIncidentCreated={() => {
@@ -264,7 +259,7 @@ export const App: React.FC = () => {
 
               {/* Main Operations Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                {/* Left Column (~62% width on large screens) */}
+                {/* Left Column (~60% width on large screens) */}
                 <div className="lg:col-span-7 space-y-5">
                   <DependencyGraph
                     dependencies={dependencies}
@@ -288,7 +283,7 @@ export const App: React.FC = () => {
                   />
                 </div>
 
-                {/* Right Column (~38% width on large screens) */}
+                {/* Right Column (~40% width on large screens) */}
                 <div className="lg:col-span-5 space-y-5">
                   <CurrentIncidentCard
                     incident={currentIncident}
