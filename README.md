@@ -251,44 +251,10 @@ python -m pytest tests/ -v
 ```
 
 ### Verified Test Results
-The backend test suite contains **28 comprehensive tests**, all reported passing:
+The backend test suite contains **50 comprehensive tests**, all reported passing:
 
 ```text
-============================= test session starts =============================
-platform win32 -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0
-rootdir: C:\Users\Akshita\Documents\GitHub\agnitia
-collected 28 items
-
-tests/test_app.py::TestGraph::test_graph_has_all_services PASSED         [  3%]
-tests/test_app.py::TestGraph::test_graph_has_all_edges PASSED            [  7%]
-tests/test_app.py::TestGraph::test_graph_is_acyclic PASSED               [ 10%]
-tests/test_app.py::TestGraph::test_downstream_of_database PASSED         [ 14%]
-tests/test_app.py::TestGraph::test_downstream_of_website_is_empty PASSED [ 17%]
-tests/test_app.py::TestGraph::test_prerequisites_of_services PASSED      [ 21%]
-tests/test_app.py::TestGraph::test_recovery_order_respects_dependencies PASSED [ 25%]
-tests/test_app.py::TestGraph::test_recovery_order_single_leaf PASSED     [ 28%]
-tests/test_app.py::TestGraph::test_cycle_detection PASSED                [ 32%]
-tests/test_app.py::TestMilestone1API::test_health PASSED                 [ 35%]
-tests/test_app.py::TestMilestone1API::test_list_services PASSED          [ 39%]
-tests/test_app.py::TestMilestone1API::test_list_dependencies PASSED      [ 42%]
-tests/test_app.py::TestMilestone1API::test_simulate_failure PASSED       [ 46%]
-tests/test_app.py::TestMilestone1API::test_simulate_failure_unknown_service PASSED [ 50%]
-tests/test_app.py::TestMilestone1API::test_incidents_recorded PASSED     [ 53%]
-tests/test_app.py::TestMilestone1API::test_recovery_plan PASSED          [ 57%]
-tests/test_app.py::TestMilestone1API::test_recovery_plan_unknown_service PASSED [ 60%]
-tests/test_app.py::TestMilestone1API::test_recovery_plan_leaf_service PASSED [ 64%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_safe_service_recovery_automatic_success PASSED [ 67%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_high_risk_requires_approval_and_resumes PASSED [ 71%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_approval_rejection_halts_recovery PASSED [ 75%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_dependency_gate_blocks_recovery_when_prereq_unhealthy PASSED [ 78%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_simulated_health_check_failure PASSED [ 82%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_duplicate_recovery_prevented PASSED [ 85%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_unknown_incident_and_approval_404 PASSED [ 89%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_reprocessing_decided_approval_returns_400 PASSED [ 92%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_audit_trail_completeness PASSED [ 96%]
-tests/test_app.py::TestMilestone2RecoveryEngine::test_timing_tracking PASSED [100%]
-
-======================== 28 passed, 1 warning in 1.47s ========================
+======================== 50 passed, 1 warning in 2.30s ========================
 ```
 
 ---
