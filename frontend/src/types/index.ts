@@ -156,5 +156,47 @@ export interface LiveProbeResult {
   timestamp: string;
 }
 
+export interface ChaosScenario {
+  id: string;
+  scenario_letter: string;
+  name: string;
+  description: string;
+  target_service: string;
+  failure_type: string;
+  expected_status: number;
+  error_code: string;
+  user_effect: string;
+  required_action: string;
+  verification_endpoints: string[];
+  dependency_impact: string[];
+}
 
+export interface ChaosStatusResponse {
+  active_scenario: ChaosScenario | null;
+  subsystems: {
+    products_catalog: 'healthy' | 'unhealthy';
+    inventory: 'healthy' | 'unhealthy';
+    checkout: 'healthy' | 'unhealthy';
+    payment: 'healthy' | 'unhealthy';
+  };
+}
 
+export interface CheckoutResponse {
+  status: string;
+  service: string;
+  order_id: string;
+  items_count: number;
+  total_amount: number;
+  payment_method: string;
+  shipping_address: Record<string, any>;
+  estimated_delivery: string;
+}
+
+export interface PaymentProcessResponse {
+  status: string;
+  service: string;
+  transaction_id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+}

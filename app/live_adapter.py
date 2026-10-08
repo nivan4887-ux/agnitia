@@ -35,9 +35,10 @@ def probe_demo_health() -> dict[str, Any]:
     now_iso = datetime.now(timezone.utc).isoformat()
 
     if not d_state["is_healthy"]:
+        status_code = d_state.get("status_code", 503)
         return {
             "healthy": False,
-            "status_code": 503,
+            "status_code": status_code,
             "endpoint": "/demo/health",
             "service": "backend_api_products",
             "error": d_state["failure_reason"] or "Database connection pool exhausted",
@@ -62,11 +63,13 @@ def probe_demo_products() -> dict[str, Any]:
     now_iso = datetime.now(timezone.utc).isoformat()
 
     if not d_state["is_healthy"]:
+        status_code = d_state.get("status_code", 503)
         return {
             "healthy": False,
-            "status_code": 503,
+            "status_code": status_code,
             "endpoint": "/demo/products",
             "error": d_state["failure_reason"] or "Products API unavailable",
+            "error_code": d_state["error_code"] or "ERR_DB_POOL_EXHAUSTED",
             "products_returned": 0,
             "timestamp": now_iso,
         }
@@ -104,6 +107,7 @@ def run_live_health_probe(auto_create_incident: bool = True) -> dict[str, Any]:
                         "health_probe": health_result,
                         "products_probe": products_result,
                         "observed_http_status": health_result["status_code"],
+                        "error_code": health_result.get("error_code"),
                         "error_message": health_result.get("error"),
                     },
                 )
@@ -120,7 +124,7 @@ def run_live_health_probe(auto_create_incident: bool = True) -> dict[str, Any]:
 
 def execute_allowlisted_action(service: str, action: str) -> dict[str, Any]:
     """Safely execute an allowlisted internal recovery action on a designated target."""
-    if target_not_allowed := (service not in ALLOWLISTED_TARGETS):
+    if service not in ALLOWLISTED_TARGETS:
         return {
             "success": False,
             "action": action,
@@ -128,7 +132,7 @@ def execute_allowlisted_action(service: str, action: str) -> dict[str, Any]:
             "error": f"Unauthorized target service: '{service}'. Must be in allowlist.",
         }
 
-    if action_not_allowed := (action not in ALLOWLISTED_ACTIONS):
+    if action not in ALLOWLISTED_ACTIONS:
         return {
             "success": False,
             "action": action,
@@ -136,8 +140,15 @@ def execute_allowlisted_action(service: str, action: str) -> dict[str, Any]:
             "error": f"Unauthorized recovery action: '{action}'. Must be in allowlist.",
         }
 
-    # If recovering backend_api (which powers the demo store), restore demo store state
+    # Reset corresponding demo subsystem states on recovery
     if service == "backend_api":
+        demo_store.set_demo_state(is_healthy=True, reason="")
+    elif service == "order_service":
+        demo_store.set_inventory_healthy(True)
+        demo_store.set_checkout_healthy(True)
+    elif service == "payment_service":
+        demo_store.set_payment_healthy(True)
+    elif service == "database":
         demo_store.set_demo_state(is_healthy=True, reason="")
 
     return {
@@ -177,4 +188,3 @@ def verify_live_service_health(service: str) -> dict[str, Any]:
         "health_check_type": "invalid_live_target",
         "message": f"Service '{service}' has no configured live HTTP verification probe endpoint.",
     }
-
