@@ -155,18 +155,10 @@ export const App: React.FC = () => {
   const handleStartRecovery = async (incidentId: string) => {
     setIsExecutingRecovery(true);
     try {
-      // Find matching incident
-      const inc = incidents.find((i) => i.id === incidentId) || incidents[0];
-      if (inc) {
-        await api.startRecovery(inc.id);
-      } else {
-        // If no incident in backend, simulate failure then start
-        await api.simulateFailure('backend_api');
-        const res = await api.getIncidents();
-        if (res.incidents.length > 0) {
-          await api.startRecovery(res.incidents[0].id);
-        }
+      if (!incidentId) {
+        throw new Error('No active incident selected for recovery.');
       }
+      await api.startRecovery(incidentId);
       showSuccess('Recovery sequence successfully executed through allowlisted adapter!');
       fetchData();
     } catch (err: any) {
@@ -199,7 +191,7 @@ export const App: React.FC = () => {
     (i) => i.status === 'open' || i.status === 'recovering' || i.status === 'awaiting_approval'
   );
 
-  const currentIncident = activeIncidents.length > 0 ? activeIncidents[0] : incidents[0] || null;
+  const currentIncident = activeIncidents.length > 0 ? activeIncidents[0] : null;
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">

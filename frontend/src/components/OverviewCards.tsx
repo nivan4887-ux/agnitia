@@ -27,13 +27,25 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
       i.status === 'awaiting_approval'
   );
 
+  const hasIncidents = activeIncidents.length > 0;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
       {/* 1. Active Incidents Card */}
       <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
         <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#FFEBEE] text-[#D32F2F] flex items-center justify-center shrink-0">
-            <AlertCircle className="w-4 h-4 fill-[#D32F2F] text-white" />
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              hasIncidents
+                ? 'bg-[#FFEBEE] text-[#D32F2F]'
+                : 'bg-[#E8F5E9] text-[#2E7D32]'
+            }`}
+          >
+            <AlertCircle
+              className={`w-4 h-4 ${
+                hasIncidents ? 'fill-[#D32F2F] text-white' : 'text-[#2E7D32]'
+              }`}
+            />
           </div>
           <span className="text-xs font-bold text-stone-800">
             Active Incidents
@@ -42,11 +54,19 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
 
         <div className="mt-1">
           <span className="text-2xl font-bold text-stone-900 block">
-            {activeIncidents.length > 0 ? activeIncidents.length : 2}
+            {activeIncidents.length}
           </span>
           <div className="mt-1">
-            <span className="inline-block text-[11px] font-semibold text-[#D32F2F] bg-[#FFEBEE] px-2.5 py-0.5 rounded-full">
-              {failedCount > 0 ? `${failedCount} critical` : '1 critical'}
+            <span
+              className={`inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                hasIncidents
+                  ? 'text-[#D32F2F] bg-[#FFEBEE]'
+                  : 'text-[#2E7D32] bg-[#E8F5E9]'
+              }`}
+            >
+              {hasIncidents
+                ? `${failedCount} critical`
+                : 'All systems normal'}
             </span>
           </div>
         </div>
@@ -65,19 +85,19 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
 
         <div className="text-[11px] space-y-0.5 font-medium mt-1">
           <div className="flex items-center space-x-1.5 text-[#2E7D32]">
-            <span className="font-bold">{healthyCount > 0 ? healthyCount : 3}</span>
+            <span className="font-bold">{healthyCount}</span>
             <span>Healthy</span>
             <span className="text-stone-400">»</span>
           </div>
           <div className="flex items-center space-x-1.5 text-[#E65100]">
             <span className="w-2 h-2 rounded-xs bg-[#E65100] inline-block"></span>
-            <span className="font-bold">{degradedCount > 0 ? degradedCount : 1}</span>
+            <span className="font-bold">{degradedCount}</span>
             <span>Degraded</span>
             <span className="text-stone-400">»</span>
           </div>
           <div className="flex items-center space-x-1.5 text-[#D32F2F]">
             <span className="w-2 h-2 rounded-full bg-[#D32F2F] inline-block"></span>
-            <span className="font-bold">{failedCount > 0 ? failedCount : 1}</span>
+            <span className="font-bold">{failedCount}</span>
             <span>Failed</span>
             <span className="text-stone-400">»</span>
           </div>
@@ -87,7 +107,13 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
       {/* 3. Recovery Readiness Card */}
       <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
         <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#FFF3E0] text-[#E65100] flex items-center justify-center shrink-0">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              hasIncidents
+                ? 'bg-[#FFF3E0] text-[#E65100]'
+                : 'bg-[#E8F5E9] text-[#2E7D32]'
+            }`}
+          >
             <CircleDot className="w-4 h-4" />
           </div>
           <span className="text-xs font-bold text-stone-800">
@@ -96,11 +122,21 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
         </div>
 
         <div className="mt-1">
-          <span className="inline-block px-2.5 py-0.5 text-xs font-bold rounded-md bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]">
-            READY
+          <span
+            className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-md ${
+              hasIncidents
+                ? 'bg-[#FFF3E0] text-[#D95A1E] border border-[#FFE0B2]'
+                : 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]'
+            }`}
+          >
+            {hasIncidents ? 'ASSESSED' : 'STANDBY'}
           </span>
           <p className="text-[11px] text-stone-500 mt-1">
-            for 1 service
+            {hasIncidents
+              ? `for ${activeIncidents.length} incident${
+                  activeIncidents.length > 1 ? 's' : ''
+                }`
+              : 'Engine armed'}
           </p>
         </div>
       </div>
@@ -108,8 +144,18 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
       {/* 4. Overall Risk Card */}
       <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
         <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#FFF3E0] text-[#E65100] flex items-center justify-center shrink-0">
-            <Shield className="w-4 h-4 fill-[#E65100]/20" />
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              failedCount > 0
+                ? 'bg-[#FFEBEE] text-[#D32F2F]'
+                : 'bg-[#E8F5E9] text-[#2E7D32]'
+            }`}
+          >
+            <Shield
+              className={`w-4 h-4 ${
+                failedCount > 0 ? 'fill-[#D32F2F]/20' : 'fill-[#2E7D32]/20'
+              }`}
+            />
           </div>
           <span className="text-xs font-bold text-stone-800">
             Overall Risk
@@ -117,11 +163,23 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
         </div>
 
         <div className="mt-1">
-          <span className="inline-block px-2.5 py-0.5 text-xs font-bold rounded-md bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]">
-            LOW
+          <span
+            className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-md ${
+              failedCount > 0
+                ? 'bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2]'
+                : degradedCount > 0
+                ? 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE0B2]'
+                : 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]'
+            }`}
+          >
+            {failedCount > 0 ? 'ELEVATED' : degradedCount > 0 ? 'MODERATE' : 'LOW'}
           </span>
           <p className="text-[11px] text-stone-500 mt-1">
-            (for current plan)
+            {failedCount > 0
+              ? 'Outage active'
+              : degradedCount > 0
+              ? 'Degraded service'
+              : 'Nominal baseline'}
           </p>
         </div>
       </div>
@@ -129,7 +187,13 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
       {/* 5. Pending Approvals Card */}
       <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
         <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#FFF3E0] text-[#E65100] flex items-center justify-center shrink-0">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              pendingApprovalsCount > 0
+                ? 'bg-[#FFF3E0] text-[#E65100]'
+                : 'bg-[#F5F2EC] text-stone-600'
+            }`}
+          >
             <User className="w-4 h-4" />
           </div>
           <span className="text-xs font-bold text-stone-800">
@@ -139,11 +203,19 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
 
         <div className="mt-1">
           <span className="text-2xl font-bold text-stone-900 block">
-            {pendingApprovalsCount > 0 ? pendingApprovalsCount : 1}
+            {pendingApprovalsCount}
           </span>
           <div className="mt-1">
-            <span className="inline-block text-[11px] font-semibold text-[#E65100] bg-[#FFF3E0] px-2.5 py-0.5 rounded-full">
-              High risk action
+            <span
+              className={`inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
+                pendingApprovalsCount > 0
+                  ? 'text-[#E65100] bg-[#FFF3E0]'
+                  : 'text-stone-500 bg-[#F5F2EC]'
+              }`}
+            >
+              {pendingApprovalsCount > 0
+                ? `${pendingApprovalsCount} high risk`
+                : '0 pending gates'}
             </span>
           </div>
         </div>
