@@ -56,38 +56,38 @@ const ServiceNode: React.FC<NodeProps> = ({ data, selected }) => {
   const health = (data.health as ServiceHealth) || 'healthy';
   const isSelected = selected || data.isSelected;
 
-  let borderColor = 'border-slate-700';
-  let badgeBg = 'bg-emerald-950 text-emerald-400 border-emerald-800';
-  let iconBg = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-  let statusIcon = <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />;
+  let borderColor = 'border-[#E7E2D9] shadow-xs';
+  let badgeBg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  let iconBg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  let statusIcon = <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />;
 
   if (health === 'failed') {
-    borderColor = 'border-rose-500 shadow-lg shadow-rose-500/20 animate-pulse';
-    badgeBg = 'bg-rose-950 text-rose-300 border-rose-800';
-    iconBg = 'bg-rose-500/20 text-rose-400 border-rose-500/40';
-    statusIcon = <AlertCircle className="w-3.5 h-3.5 text-rose-400" />;
+    borderColor = 'border-rose-500 shadow-sm animate-pulse';
+    badgeBg = 'bg-rose-50 text-rose-700 border-rose-200';
+    iconBg = 'bg-rose-50 text-rose-600 border-rose-200';
+    statusIcon = <AlertCircle className="w-3.5 h-3.5 text-rose-600" />;
   } else if (health === 'degraded') {
-    borderColor = 'border-amber-500/80 shadow-md shadow-amber-500/10';
-    badgeBg = 'bg-amber-950 text-amber-300 border-amber-800';
-    iconBg = 'bg-amber-500/20 text-amber-400 border-amber-500/40';
-    statusIcon = <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />;
+    borderColor = 'border-amber-400 shadow-xs';
+    badgeBg = 'bg-amber-50 text-amber-800 border-amber-200';
+    iconBg = 'bg-amber-50 text-amber-600 border-amber-200';
+    statusIcon = <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />;
   } else if (health === 'recovering') {
-    borderColor = 'border-cyan-500 shadow-lg shadow-cyan-500/20 animate-pulse';
-    badgeBg = 'bg-cyan-950 text-cyan-300 border-cyan-800';
-    iconBg = 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40';
-    statusIcon = <Loader2 className="w-3.5 h-3.5 text-cyan-400 animate-spin" />;
+    borderColor = 'border-brand-500 shadow-sm animate-pulse';
+    badgeBg = 'bg-brand-50 text-brand-800 border-brand-200';
+    iconBg = 'bg-brand-50 text-brand-600 border-brand-200';
+    statusIcon = <Loader2 className="w-3.5 h-3.5 text-brand-600 animate-spin" />;
   }
 
   return (
     <div
-      className={`min-w-[170px] bg-[#0f172a] rounded-xl border-2 p-3 transition-all cursor-pointer select-none ${borderColor} ${
-        isSelected ? 'ring-2 ring-cyan-400 ring-offset-2 ring-offset-[#090d16]' : ''
+      className={`min-w-[170px] bg-white rounded-xl border-2 p-3 transition-all cursor-pointer select-none shadow-[0_1px_3px_rgba(40,25,15,0.06)] ${borderColor} ${
+        isSelected ? 'ring-2 ring-brand-500 ring-offset-2 ring-offset-[#FAF8F5]' : ''
       }`}
     >
       <Handle
         type="target"
         position={Position.Left}
-        className="!bg-cyan-400 !w-2.5 !h-2.5 !border-2 !border-[#090d16]"
+        className="!bg-brand-600 !w-2.5 !h-2.5 !border-2 !border-white"
       />
 
       <div className="flex items-center space-x-2.5">
@@ -95,7 +95,7 @@ const ServiceNode: React.FC<NodeProps> = ({ data, selected }) => {
           {getServiceIcon(service)}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-xs font-bold text-white truncate font-['JetBrains_Mono']">
+          <h4 className="text-xs font-bold text-[#1C130D] truncate font-['JetBrains_Mono']">
             {service}
           </h4>
           <div className="mt-1 flex items-center space-x-1">
@@ -112,7 +112,7 @@ const ServiceNode: React.FC<NodeProps> = ({ data, selected }) => {
       <Handle
         type="source"
         position={Position.Right}
-        className="!bg-cyan-400 !w-2.5 !h-2.5 !border-2 !border-[#090d16]"
+        className="!bg-brand-600 !w-2.5 !h-2.5 !border-2 !border-white"
       />
     </div>
   );
@@ -168,13 +168,13 @@ export const DependencyGraph: React.FC<DependencyGraphProps> = ({
         target: edge.to,
         animated: isFailed,
         style: {
-          stroke: isFailed ? '#f43f5e' : '#38bdf8',
-          strokeWidth: isFailed ? 2.5 : 1.5,
+          stroke: isFailed ? '#DC2626' : '#8C7E72',
+          strokeWidth: isFailed ? 2.5 : 1.75,
           strokeDasharray: isFailed ? '5 5' : undefined,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isFailed ? '#f43f5e' : '#38bdf8',
+          color: isFailed ? '#DC2626' : '#8C7E72',
           width: 16,
           height: 16,
         },
@@ -183,34 +183,34 @@ export const DependencyGraph: React.FC<DependencyGraphProps> = ({
   }, [dependencies.edges, services]);
 
   return (
-    <div className="bg-[#0f172a] border border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col h-[380px]">
-      <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-900/40">
+    <div className="bg-white border border-[#E7E2D9] rounded-xl overflow-hidden shadow-sm flex flex-col h-[380px]">
+      <div className="px-4 py-3 border-b border-[#E7E2D9] flex items-center justify-between bg-warm-50/70">
         <div className="flex items-center space-x-2">
-          <Layers className="w-4 h-4 text-cyan-400" />
-          <h3 className="text-sm font-semibold text-white">
+          <Layers className="w-4 h-4 text-brand-600" />
+          <h3 className="text-sm font-semibold text-[#1C130D]">
             Directed Service Dependency Graph
           </h3>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-stone-500">
             (Edge A → B means B depends on A)
           </span>
         </div>
-        <div className="flex items-center space-x-3 text-[11px] text-slate-400">
+        <div className="flex items-center space-x-3 text-[11px] text-stone-600 font-medium">
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>Healthy</span>
           </span>
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
             <span>Degraded</span>
           </span>
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
             <span>Failed</span>
           </span>
         </div>
       </div>
 
-      <div className="flex-1 w-full h-full relative">
+      <div className="flex-1 w-full h-full relative bg-[#FAF8F5]">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -223,7 +223,7 @@ export const DependencyGraph: React.FC<DependencyGraphProps> = ({
           elementsSelectable={true}
           proOptions={{ hideAttribution: true }}
         >
-          <Background color="#1e293b" gap={18} size={1} />
+          <Background color="#E5DFD5" gap={18} size={1.2} />
           <Controls showInteractive={false} className="!left-2 !bottom-2" />
         </ReactFlow>
       </div>

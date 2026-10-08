@@ -25,43 +25,43 @@ const getStatusBadge = (status: Incident['status']) => {
   switch (status) {
     case 'open':
       return (
-        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-rose-950 text-rose-400 border border-rose-800 flex items-center space-x-1">
-          <AlertCircle className="w-3 h-3" />
+        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-rose-50 text-rose-800 border border-rose-300 flex items-center space-x-1 font-mono">
+          <AlertCircle className="w-3 h-3 text-rose-600" />
           <span>Open</span>
         </span>
       );
     case 'recovering':
       return (
-        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center space-x-1 animate-pulse">
-          <Loader2 className="w-3 h-3 animate-spin" />
+        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-brand-50 text-brand-800 border border-brand-300 flex items-center space-x-1 animate-pulse font-mono">
+          <Loader2 className="w-3 h-3 animate-spin text-brand-600" />
           <span>Recovering</span>
         </span>
       );
     case 'awaiting_approval':
       return (
-        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-amber-950 text-amber-300 border border-amber-800 flex items-center space-x-1 animate-bounce">
-          <ShieldAlert className="w-3 h-3" />
+        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-amber-50 text-amber-800 border border-amber-300 flex items-center space-x-1 animate-pulse font-mono">
+          <ShieldAlert className="w-3 h-3 text-amber-600" />
           <span>Awaiting Approval</span>
         </span>
       );
     case 'resolved':
       return (
-        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center space-x-1">
-          <CheckCircle className="w-3 h-3" />
+        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center space-x-1 font-mono">
+          <CheckCircle className="w-3 h-3 text-emerald-600" />
           <span>Resolved</span>
         </span>
       );
     case 'failed':
       return (
-        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-rose-950 text-rose-300 border border-rose-800 flex items-center space-x-1">
-          <XCircle className="w-3 h-3" />
+        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-rose-50 text-rose-800 border border-rose-300 flex items-center space-x-1 font-mono">
+          <XCircle className="w-3 h-3 text-rose-600" />
           <span>Failed</span>
         </span>
       );
     case 'aborted':
       return (
-        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-slate-800 text-slate-400 border border-slate-700 flex items-center space-x-1">
-          <XCircle className="w-3 h-3" />
+        <span className="px-2 py-0.5 text-xs font-bold uppercase rounded bg-stone-100 text-stone-700 border border-stone-300 flex items-center space-x-1 font-mono">
+          <XCircle className="w-3 h-3 text-stone-500" />
           <span>Aborted</span>
         </span>
       );
@@ -93,24 +93,26 @@ export const IncidentPanel: React.FC<IncidentPanelProps> = ({
   };
 
   return (
-    <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-4 shadow-sm flex flex-col">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+    <div className="bg-white border border-[#E7E2D9] rounded-xl p-5 shadow-sm flex flex-col">
+      <div className="flex items-center justify-between border-b border-[#F0EBE1] pb-3 mb-4">
         <div className="flex items-center space-x-2">
-          <Activity className="w-4 h-4 text-cyan-400" />
-          <h3 className="text-sm font-semibold text-white">
+          <div className="p-1.5 bg-brand-50 rounded-lg border border-brand-200">
+            <Activity className="w-4 h-4 text-brand-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-[#1C130D]">
             Incident Log & Recovery Orchestration
           </h3>
         </div>
-        <span className="text-xs text-slate-400 font-['JetBrains_Mono']">
+        <span className="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
           Total: {incidents.length}
         </span>
       </div>
 
       {incidents.length === 0 ? (
-        <div className="py-12 text-center text-slate-500 flex flex-col items-center justify-center space-y-2">
-          <CheckCircle className="w-8 h-8 text-emerald-500/40 stroke-[1.5]" />
-          <p className="text-xs">No incidents recorded.</p>
-          <p className="text-[11px] text-slate-600">
+        <div className="py-12 text-center text-stone-500 flex flex-col items-center justify-center space-y-2">
+          <CheckCircle className="w-8 h-8 text-emerald-600/70 stroke-[1.5]" />
+          <p className="text-xs font-medium text-stone-600">No incidents recorded.</p>
+          <p className="text-[11px] text-stone-400">
             Use the simulation panel to trigger a simulated failure.
           </p>
         </div>
@@ -125,30 +127,30 @@ export const IncidentPanel: React.FC<IncidentPanelProps> = ({
             return (
               <div
                 key={incident.id}
-                className="bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 space-y-3 transition"
+                className="bg-stone-50 border border-[#E7E2D9] rounded-xl p-3.5 space-y-3 transition hover:border-stone-300"
               >
                 {/* Header info */}
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-xs font-bold text-white font-['JetBrains_Mono']">
+                      <span className="text-xs font-bold text-[#1C130D] font-mono">
                         Root: {incident.failed_service}
                       </span>
                       {getStatusBadge(incident.status)}
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1 font-mono">
+                    <p className="text-[11px] text-stone-500 mt-1 font-mono">
                       ID: {incident.id.slice(0, 13)}...
                     </p>
                   </div>
 
-                  <div className="text-right text-[11px] text-slate-400 space-y-0.5">
+                  <div className="text-right text-[11px] text-stone-500 space-y-0.5">
                     <div className="flex items-center justify-end space-x-1">
-                      <Clock className="w-3 h-3 text-slate-500" />
+                      <Clock className="w-3 h-3 text-stone-400" />
                       <span>{new Date(incident.created_at).toLocaleTimeString()}</span>
                     </div>
                     {incident.total_recovery_duration_seconds !== null &&
                       incident.total_recovery_duration_seconds !== undefined && (
-                        <div className="text-cyan-400 font-mono text-[10px]">
+                        <div className="text-brand-700 font-mono text-[10px] font-semibold">
                           Duration: {incident.total_recovery_duration_seconds.toFixed(2)}s
                         </div>
                       )}
@@ -157,7 +159,7 @@ export const IncidentPanel: React.FC<IncidentPanelProps> = ({
 
                 {/* Affected Services */}
                 <div>
-                  <span className="text-[11px] font-semibold text-slate-400 block mb-1">
+                  <span className="text-[11px] font-medium text-stone-600 block mb-1">
                     Affected Downstream Services:
                   </span>
                   <div className="flex flex-wrap gap-1.5">
@@ -166,8 +168,8 @@ export const IncidentPanel: React.FC<IncidentPanelProps> = ({
                         key={svc}
                         className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
                           svc === incident.failed_service
-                            ? 'bg-rose-950/80 text-rose-300 border-rose-800'
-                            : 'bg-amber-950/40 text-amber-300 border-amber-800/60'
+                            ? 'bg-rose-50 text-rose-800 border-rose-200 font-bold'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
                         }`}
                       >
                         {svc}
@@ -177,12 +179,12 @@ export const IncidentPanel: React.FC<IncidentPanelProps> = ({
                 </div>
 
                 {/* Action Controls & Accordion */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                <div className="flex items-center justify-between pt-2 border-t border-[#E7E2D9]">
                   <button
                     onClick={() => toggleExpand(incident.id)}
-                    className="flex items-center space-x-1 text-xs text-slate-400 hover:text-slate-200 transition"
+                    className="flex items-center space-x-1 text-xs text-stone-600 hover:text-[#1C130D] transition"
                   >
-                    <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                    <Layers className="w-3.5 h-3.5 text-brand-600" />
                     <span>
                       {incident.recovery_steps?.length || 0} Recovery Step
                       {incident.recovery_steps?.length === 1 ? '' : 's'}
@@ -198,7 +200,7 @@ export const IncidentPanel: React.FC<IncidentPanelProps> = ({
                     <button
                       onClick={() => handleStartRecovery(incident.id)}
                       disabled={isStarting}
-                      className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
+                      className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm transition disabled:opacity-50"
                     >
                       {isStarting ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -212,39 +214,39 @@ export const IncidentPanel: React.FC<IncidentPanelProps> = ({
 
                 {/* Detailed Steps Accordion */}
                 {isExpanded && (
-                  <div className="pt-2 space-y-2 text-xs border-t border-slate-800">
+                  <div className="pt-2 space-y-2 text-xs border-t border-[#E7E2D9]">
                     {incident.recovery_steps && incident.recovery_steps.length > 0 ? (
-                      <div className="bg-slate-950 rounded-lg p-2.5 space-y-2 border border-slate-800/60 font-mono text-[11px]">
+                      <div className="bg-white rounded-lg p-3 space-y-2 border border-[#E7E2D9] font-mono text-[11px]">
                         {incident.recovery_steps.map((step, idx) => (
                           <div
                             key={idx}
-                            className="flex items-start justify-between border-b border-slate-900 pb-1.5 last:border-0 last:pb-0"
+                            className="flex items-start justify-between border-b border-[#F0EBE1] pb-2 last:border-0 last:pb-0"
                           >
                             <div>
                               <div className="flex items-center space-x-2">
-                                <span className="text-cyan-400 font-bold">
+                                <span className="text-brand-700 font-bold">
                                   #{idx + 1} {step.service}
                                 </span>
-                                <span className="text-slate-500 text-[10px]">
+                                <span className="text-stone-400 text-[10px]">
                                   ({step.action || 'action'})
                                 </span>
                               </div>
                               {step.reason && (
-                                <p className="text-rose-400 text-[10px] mt-0.5">
+                                <p className="text-rose-600 text-[10px] mt-0.5">
                                   {step.reason}
                                 </p>
                               )}
                               {step.health_check && (
-                                <p className="text-emerald-400 text-[10px] mt-0.5">
+                                <p className="text-emerald-700 text-[10px] mt-0.5">
                                   Probe: {step.health_check.message}
                                 </p>
                               )}
                             </div>
                             <span
-                              className={`px-1.5 py-0.2 rounded text-[9px] uppercase font-bold ${
+                              className={`px-1.5 py-0.5 rounded text-[9px] uppercase font-bold border ${
                                 step.status === 'healthy'
-                                  ? 'bg-emerald-950 text-emerald-400'
-                                  : 'bg-rose-950 text-rose-400'
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                  : 'bg-rose-50 text-rose-800 border-rose-200'
                               }`}
                             >
                               {step.status}
@@ -253,7 +255,7 @@ export const IncidentPanel: React.FC<IncidentPanelProps> = ({
                         ))}
                       </div>
                     ) : (
-                      <p className="text-slate-500 text-[11px] italic">
+                      <p className="text-stone-400 text-[11px] italic">
                         Recovery not started yet. Click &quot;Execute Recovery Plan&quot; to begin.
                       </p>
                     )}

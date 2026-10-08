@@ -4,12 +4,13 @@
 
 @layer base {
   body {
-    background-color: #090d16;
-    color: #e2e8f0;
+    background-color: #FAF8F5;
+    color: #292524;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 }
 
-/* React Flow custom styling for dark DevOps theme */
+/* React Flow custom styling for clean warm white / dark brown theme */
 .react-flow__node {
   border-radius: 0.75rem;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -18,26 +19,26 @@
 .react-flow__handle {
   width: 8px;
   height: 8px;
-  background: #38bdf8;
-  border: 2px solid #090d16;
+  background: #D95A1E;
+  border: 2px solid #FFFFFF;
 }
 
 .react-flow__controls {
-  background: #0f172a !important;
-  border: 1px solid #334155 !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E7E2D9 !important;
   border-radius: 0.5rem !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: 0 2px 4px rgba(40, 25, 15, 0.05) !important;
 }
 
 .react-flow__controls-button {
-  background: #0f172a !important;
-  border-bottom: 1px solid #334155 !important;
-  color: #94a3b8 !important;
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E7E2D9 !important;
+  color: #78716C !important;
 }
 
 .react-flow__controls-button:hover {
-  background: #1e293b !important;
-  color: #f8fafc !important;
+  background: #FAF8F5 !important;
+  color: #D95A1E !important;
 }
 
 .react-flow__controls-button svg {
@@ -54,13 +55,14 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #FAF8F5;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #DCD5C9;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #C5BBAA;
 }
+
 

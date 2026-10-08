@@ -158,7 +158,7 @@ export const App: React.FC = () => {
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Header */}
       <Header
         backendOnline={backendOnline}
@@ -174,14 +174,14 @@ export const App: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Error / Alert banner */}
         {errorMessage && (
-          <div className="bg-rose-950/80 border border-rose-800 rounded-xl p-4 flex items-center justify-between shadow-lg animate-in fade-in">
+          <div className="bg-rose-50 border border-rose-300 rounded-xl p-4 flex items-center justify-between shadow-sm animate-in fade-in">
             <div className="flex items-center space-x-3">
-              <AlertTriangle className="w-5 h-5 text-rose-400 flex-shrink-0" />
-              <p className="text-sm font-medium text-rose-200">{errorMessage}</p>
+              <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+              <p className="text-sm font-medium text-rose-800">{errorMessage}</p>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-rose-400 hover:text-rose-200 p-1"
+              className="text-rose-500 hover:text-rose-800 p-1 transition"
             >
               <XCircle className="w-4 h-4" />
             </button>
@@ -190,14 +190,14 @@ export const App: React.FC = () => {
 
         {/* Success toast banner */}
         {successMessage && (
-          <div className="bg-emerald-950/80 border border-emerald-800 rounded-xl p-3.5 flex items-center justify-between shadow-lg animate-in fade-in">
+          <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 flex items-center justify-between shadow-sm animate-in fade-in">
             <div className="flex items-center space-x-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-              <p className="text-sm font-medium text-emerald-200">{successMessage}</p>
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <p className="text-sm font-medium text-emerald-800">{successMessage}</p>
             </div>
             <button
               onClick={() => setSuccessMessage(null)}
-              className="text-emerald-400 hover:text-emerald-200 p-1"
+              className="text-emerald-500 hover:text-emerald-800 p-1 transition"
             >
               <XCircle className="w-4 h-4" />
             </button>
@@ -286,7 +286,7 @@ export const App: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-[#0f172a]/40 py-4 px-6 text-center text-xs text-slate-500 font-mono">
+      <footer className="border-t border-[#E7E2D9] bg-white py-4 px-6 text-center text-xs text-stone-500 font-mono">
         RecoverOps • 24h Hackathon Project • Safe Dependency-Aware Incident Recovery Platform
       </footer>
     </div>

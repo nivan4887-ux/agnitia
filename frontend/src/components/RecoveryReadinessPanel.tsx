@@ -76,22 +76,22 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
     switch (status) {
       case 'READY':
         return (
-          <span className="px-2.5 py-1 text-xs font-bold uppercase rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700 flex items-center space-x-1.5 shadow-sm">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="px-2.5 py-1 text-xs font-bold uppercase rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center space-x-1.5 shadow-sm font-mono">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             <span>READY</span>
           </span>
         );
       case 'NEEDS_APPROVAL':
         return (
-          <span className="px-2.5 py-1 text-xs font-bold uppercase rounded-md bg-amber-950 text-amber-300 border border-amber-700 flex items-center space-x-1.5 shadow-sm animate-pulse">
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+          <span className="px-2.5 py-1 text-xs font-bold uppercase rounded-md bg-amber-50 text-amber-800 border border-amber-300 flex items-center space-x-1.5 shadow-sm animate-pulse font-mono">
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
             <span>NEEDS APPROVAL</span>
           </span>
         );
       case 'BLOCKED':
         return (
-          <span className="px-2.5 py-1 text-xs font-bold uppercase rounded-md bg-rose-950 text-rose-300 border border-rose-700 flex items-center space-x-1.5 shadow-sm">
-            <ShieldX className="w-3.5 h-3.5 text-rose-400" />
+          <span className="px-2.5 py-1 text-xs font-bold uppercase rounded-md bg-rose-50 text-rose-800 border border-rose-300 flex items-center space-x-1.5 shadow-sm font-mono">
+            <ShieldX className="w-3.5 h-3.5 text-rose-600" />
             <span>BLOCKED</span>
           </span>
         );
@@ -104,19 +104,19 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
     switch (risk) {
       case 'HIGH':
         return (
-          <span className="px-2 py-0.5 text-xs font-semibold uppercase rounded bg-rose-950/80 text-rose-300 border border-rose-800">
+          <span className="px-2 py-0.5 text-xs font-semibold uppercase rounded bg-rose-50 text-rose-800 border border-rose-200 font-mono">
             HIGH RISK
           </span>
         );
       case 'MEDIUM':
         return (
-          <span className="px-2 py-0.5 text-xs font-semibold uppercase rounded bg-amber-950/80 text-amber-300 border border-amber-800">
+          <span className="px-2 py-0.5 text-xs font-semibold uppercase rounded bg-amber-50 text-amber-800 border border-amber-200 font-mono">
             MEDIUM RISK
           </span>
         );
       case 'LOW':
         return (
-          <span className="px-2 py-0.5 text-xs font-semibold uppercase rounded bg-emerald-950/80 text-emerald-300 border border-emerald-800">
+          <span className="px-2 py-0.5 text-xs font-semibold uppercase rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">
             LOW RISK
           </span>
         );
@@ -128,30 +128,30 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
   const getSeverityIcon = (sev: string) => {
     switch (sev) {
       case 'critical':
-        return <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />;
+        return <XCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />;
       case 'error':
-        return <AlertTriangle className="w-4 h-4 text-rose-400 flex-shrink-0" />;
+        return <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />;
       case 'warning':
-        return <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />;
+        return <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />;
       case 'info':
       default:
-        return <Info className="w-4 h-4 text-cyan-400 flex-shrink-0" />;
+        return <Info className="w-4 h-4 text-stone-500 flex-shrink-0" />;
     }
   };
 
   return (
-    <div className="bg-[#0f172a] border border-slate-800 rounded-xl p-5 shadow-lg space-y-4">
+    <div className="bg-white border border-[#E7E2D9] rounded-xl p-5 shadow-sm space-y-4">
       {/* Header & Title */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F0EBE1] pb-3.5">
         <div className="flex items-center space-x-2.5">
-          <div className="p-2 bg-cyan-950/80 border border-cyan-800 rounded-lg">
-            <ShieldCheck className="w-5 h-5 text-cyan-400" />
+          <div className="p-2 bg-brand-50 border border-brand-200 rounded-lg text-brand-600">
+            <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-white tracking-tight flex items-center space-x-2">
+            <h3 className="text-base font-semibold text-[#1C130D] tracking-tight flex items-center space-x-2">
               <span>Recovery Confidence & Risk Gate</span>
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-stone-500">
               Deterministic pre-flight readiness & dependency prerequisite verification
             </p>
           </div>
@@ -168,19 +168,19 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
           <button
             onClick={() => runAssessment()}
             disabled={isLoading}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 flex items-center space-x-1.5 transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 bg-white hover:bg-stone-50 text-[#1C130D] text-xs font-medium rounded-lg border border-[#E7E2D9] flex items-center space-x-1.5 transition shadow-sm disabled:opacity-50"
             title="Re-run assessment"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-cyan-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-brand-600' : 'text-stone-500'}`} />
             <span>{isLoading ? 'Assessing...' : 'Re-assess'}</span>
           </button>
         </div>
       </div>
 
       {/* Target Selection Controls */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-stone-50 p-3 rounded-lg border border-[#E7E2D9]">
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">
+          <label className="block text-xs font-medium text-stone-600 mb-1">
             Target Service Topology
           </label>
           <select
@@ -190,7 +190,7 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
               setSelectedIncidentId('');
             }}
             disabled={isLoading}
-            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 font-['JetBrains_Mono'] focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            className="w-full bg-white border border-[#E7E2D9] rounded-lg px-3 py-1.5 text-xs text-[#1C130D] font-mono focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
           >
             {services.map((s) => (
               <option key={s} value={s}>
@@ -201,14 +201,14 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1">
+          <label className="block text-xs font-medium text-stone-600 mb-1">
             Assess Open Incident Context (Optional)
           </label>
           <select
             value={selectedIncidentId}
             onChange={(e) => setSelectedIncidentId(e.target.value)}
             disabled={isLoading}
-            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 font-['JetBrains_Mono'] focus:outline-none focus:ring-1 focus:ring-cyan-500"
+            className="w-full bg-white border border-[#E7E2D9] rounded-lg px-3 py-1.5 text-xs text-[#1C130D] font-mono focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-brand-500"
           >
             <option value="">None (Evaluate standalone topology)</option>
             {activeIncidents.map((inc) => (
@@ -222,16 +222,16 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
 
       {/* Loading state */}
       {isLoading && !assessment && (
-        <div className="py-8 flex flex-col items-center justify-center space-y-2 text-slate-400">
-          <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
+        <div className="py-8 flex flex-col items-center justify-center space-y-2 text-stone-500">
+          <Loader2 className="w-6 h-6 animate-spin text-brand-600" />
           <p className="text-xs font-mono">Evaluating dependency prerequisites & playbooks...</p>
         </div>
       )}
 
       {/* Stale State Banner */}
       {assessment?.is_stale && (
-        <div className="bg-amber-950/60 border border-amber-800 rounded-lg p-3 flex items-center space-x-2.5 text-xs text-amber-200">
-          <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+        <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 flex items-center space-x-2.5 text-xs text-amber-900">
+          <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
           <span>
             <strong>Stale Assessment:</strong> Service or incident state has updated since last assessment. Re-assessing automatically.
           </span>
@@ -245,26 +245,26 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
           <div
             className={`p-3.5 rounded-lg border flex flex-col space-y-2 ${
               assessment.readiness_status === 'READY'
-                ? 'bg-emerald-950/30 border-emerald-800/80 text-emerald-200'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 : assessment.readiness_status === 'NEEDS_APPROVAL'
-                ? 'bg-amber-950/30 border-amber-800/80 text-amber-200'
-                : 'bg-rose-950/30 border-rose-800/80 text-rose-200'
+                ? 'bg-amber-50 border-amber-200 text-amber-900'
+                : 'bg-rose-50 border-rose-200 text-rose-900'
             }`}
           >
             <div className="flex items-start space-x-2.5">
               {assessment.readiness_status === 'READY' && (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
               )}
               {assessment.readiness_status === 'NEEDS_APPROVAL' && (
-                <ShieldAlert className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
               )}
               {assessment.readiness_status === 'BLOCKED' && (
-                <XCircle className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" />
+                <XCircle className="w-4 h-4 text-rose-600 mt-0.5 flex-shrink-0" />
               )}
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-100">{assessment.summary}</p>
-                <p className="text-xs opacity-90">
-                  <span className="font-semibold text-white">Recommended Next Step: </span>
+                <p className="text-xs font-semibold text-[#1C130D]">{assessment.summary}</p>
+                <p className="text-xs text-stone-700">
+                  <span className="font-semibold text-[#1C130D]">Recommended Next Step: </span>
                   {assessment.recommended_next_step}
                 </p>
               </div>
@@ -273,13 +273,13 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
 
           {/* Planned Sequence & Downstream Blast Radius */}
           {assessment.recovery_order && assessment.recovery_order.length > 0 && (
-            <div className="bg-slate-900/80 border border-slate-800 rounded-lg p-3 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400">
+            <div className="bg-stone-50 border border-[#E7E2D9] rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between text-xs text-stone-600">
                 <div className="flex items-center space-x-1.5 font-medium">
-                  <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                  <Layers className="w-3.5 h-3.5 text-brand-600" />
                   <span>Dependency-Safe Sequence</span>
                 </div>
-                <span className="font-mono text-[11px] text-slate-400">
+                <span className="font-mono text-[11px] text-stone-500">
                   Blast Radius: {assessment.recovery_order.length} service(s)
                 </span>
               </div>
@@ -289,14 +289,14 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
                     <span
                       className={`px-2 py-0.5 rounded text-xs font-mono font-medium border ${
                         step === assessment.target_service
-                          ? 'bg-rose-950/60 text-rose-300 border-rose-800'
-                          : 'bg-slate-800 text-slate-300 border-slate-700'
+                          ? 'bg-brand-50 text-brand-900 border-brand-300 font-semibold'
+                          : 'bg-white text-stone-700 border-[#E7E2D9]'
                       }`}
                     >
                       {step}
                     </span>
                     {idx < assessment.recovery_order!.length - 1 && (
-                      <ArrowRight className="w-3 h-3 text-slate-500 flex-shrink-0" />
+                      <ArrowRight className="w-3 h-3 text-stone-400 flex-shrink-0" />
                     )}
                   </React.Fragment>
                 ))}
@@ -306,17 +306,17 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
 
           {/* Blocked Actions / Required Approvals Warnings */}
           {assessment.blocked_actions.length > 0 && (
-            <div className="bg-rose-950/40 border border-rose-900/80 rounded-lg p-3 space-y-2">
-              <div className="flex items-center space-x-1.5 text-xs font-semibold text-rose-300">
-                <XCircle className="w-4 h-4 text-rose-400" />
+            <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 space-y-2">
+              <div className="flex items-center space-x-1.5 text-xs font-semibold text-rose-800">
+                <XCircle className="w-4 h-4 text-rose-600" />
                 <span>Blocked Prerequisites ({assessment.blocked_actions.length})</span>
               </div>
-              <ul className="space-y-1.5 text-xs text-rose-200">
+              <ul className="space-y-1.5 text-xs text-rose-900">
                 {assessment.blocked_actions.map((b, i) => (
                   <li key={i} className="flex items-start space-x-1.5 font-mono text-[11px]">
-                    <span className="text-rose-400">•</span>
+                    <span className="text-rose-500">•</span>
                     <span>
-                      <strong className="text-rose-100">{b.service}:</strong> {b.reason}
+                      <strong className="text-rose-950">{b.service}:</strong> {b.reason}
                     </span>
                   </li>
                 ))}
@@ -325,17 +325,17 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
           )}
 
           {assessment.required_approvals.length > 0 && (
-            <div className="bg-amber-950/40 border border-amber-900/80 rounded-lg p-3 space-y-2">
-              <div className="flex items-center space-x-1.5 text-xs font-semibold text-amber-300">
-                <Lock className="w-4 h-4 text-amber-400" />
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+              <div className="flex items-center space-x-1.5 text-xs font-semibold text-amber-800">
+                <Lock className="w-4 h-4 text-amber-600" />
                 <span>Human-in-the-Loop Approvals Required ({assessment.required_approvals.length})</span>
               </div>
-              <ul className="space-y-1.5 text-xs text-amber-200">
+              <ul className="space-y-1.5 text-xs text-amber-900">
                 {assessment.required_approvals.map((appr, i) => (
                   <li key={i} className="flex items-start space-x-1.5 font-mono text-[11px]">
-                    <span className="text-amber-400">•</span>
+                    <span className="text-amber-500">•</span>
                     <span>
-                      <strong className="text-amber-100">{appr.service}</strong> ({appr.action}) — {appr.description}
+                      <strong className="text-amber-950">{appr.service}</strong> ({appr.action}) — {appr.description}
                     </span>
                   </li>
                 ))}
@@ -345,13 +345,13 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
 
           {/* Detailed Diagnostic Findings */}
           {assessment.findings && assessment.findings.length > 0 && (
-            <div className="bg-slate-900/40 border border-slate-800 rounded-lg p-3 space-y-2">
-              <div className="flex items-center justify-between text-xs text-slate-400 pb-1 border-b border-slate-800/60">
+            <div className="bg-stone-50 border border-[#E7E2D9] rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between text-xs text-stone-600 pb-1 border-b border-[#E7E2D9]">
                 <div className="flex items-center space-x-1.5 font-medium">
-                  <Zap className="w-3.5 h-3.5 text-cyan-400" />
+                  <Zap className="w-3.5 h-3.5 text-brand-600" />
                   <span>Rule Engine Diagnostics & Findings</span>
                 </div>
-                <span className="font-mono text-[10px] text-slate-400">
+                <span className="font-mono text-[10px] text-stone-500">
                   {assessment.findings.length} check(s) recorded
                 </span>
               </div>
@@ -359,12 +359,12 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
                 {assessment.findings.map((f, i) => (
                   <div
                     key={i}
-                    className="flex items-start space-x-2 text-xs py-1 px-2 rounded bg-slate-950/50 border border-slate-800/60"
+                    className="flex items-start space-x-2 text-xs py-1.5 px-2 rounded bg-white border border-[#E7E2D9]"
                   >
                     {getSeverityIcon(f.severity)}
                     <div className="flex-1 font-mono text-[11px]">
-                      <span className="font-bold text-slate-300 mr-1.5">[{f.code}]</span>
-                      <span className="text-slate-300">{f.message}</span>
+                      <span className="font-bold text-stone-800 mr-1.5">[{f.code}]</span>
+                      <span className="text-stone-700">{f.message}</span>
                     </div>
                   </div>
                 ))}
@@ -377,7 +377,7 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => onStartRecovery(selectedIncidentId)}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-semibold rounded-lg shadow-md flex items-center space-x-2 transition"
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-2 transition"
               >
                 <Zap className="w-3.5 h-3.5" />
                 <span>Execute Recovery for #{selectedIncidentId.slice(0, 8)}</span>
@@ -386,9 +386,9 @@ export const RecoveryReadinessPanel: React.FC<RecoveryReadinessPanelProps> = ({
           )}
 
           {/* Assessment Timestamp & Fingerprint Footer */}
-          <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-1">
+          <div className="flex items-center justify-between text-[11px] text-stone-400 font-mono pt-1">
             <div className="flex items-center space-x-1">
-              <Clock className="w-3 h-3" />
+              <Clock className="w-3 h-3 text-stone-400" />
               <span>Assessed: {new Date(assessment.assessed_at).toLocaleTimeString()}</span>
             </div>
             <span>Snapshot: {assessment.state_fingerprint.slice(0, 8)}</span>
