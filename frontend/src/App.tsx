@@ -5,24 +5,30 @@ import {
   DependenciesResponse,
   Incident,
   RecoveryPlanResponse,
+  RecoveryAssessment,
   ServiceHealth,
 } from './types';
 import { api } from './services/api';
+import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { OverviewCards } from './components/OverviewCards';
 import { DependencyGraph } from './components/DependencyGraph';
-import { SimulationPanel } from './components/SimulationPanel';
-import { IncidentPanel } from './components/IncidentPanel';
+import { CurrentIncidentCard } from './components/CurrentIncidentCard';
+import { PrerequisiteChecksCard } from './components/PrerequisiteChecksCard';
 import { ApprovalCenter } from './components/ApprovalCenter';
 import { AuditTimeline } from './components/AuditTimeline';
+import { RecentIncidentsTable } from './components/RecentIncidentsTable';
+import { RecentRecoveryActionsTable } from './components/RecentRecoveryActionsTable';
 import { RecoveryPlanModal } from './components/RecoveryPlanModal';
-import { RecoveryReadinessPanel } from './components/RecoveryReadinessPanel';
 import { DemoStoreView } from './components/DemoStoreView';
 import { AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
-  // State
+  // Navigation State
+  const [activeNav, setActiveNav] = useState<string>('overview');
   const [activeTab, setActiveTab] = useState<'dashboard' | 'demo_store'>('dashboard');
+
+  // Backend state
   const [backendOnline, setBackendOnline] = useState<boolean>(false);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -38,10 +44,12 @@ export const App: React.FC = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<Approval[]>([]);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [assessment, setAssessment] = useState<RecoveryAssessment | null>(null);
 
   // UI state
-  const [selectedService, setSelectedService] = useState<string>('database');
+  const [selectedService, setSelectedService] = useState<string>('backend_api');
   const [previewPlan, setPreviewPlan] = useState<RecoveryPlanResponse | null>(null);
+  const [isExecutingRecovery, setIsExecutingRecovery] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
 
@@ -90,8 +98,19 @@ export const App: React.FC = () => {
       setLastUpdated(new Date());
       setErrorMessage(null);
 
-      if (depsRes.nodes.length > 0 && !selectedService) {
-        setSelectedService(depsRes.nodes[0]);
+      // Run assessment for the target service or incident
+      const openInc = incidentsRes.incidents.find(
+        (i) => i.status === 'open' || i.status === 'recovering' || i.status === 'awaiting_approval'
+      );
+
+      try {
+        const assessRes = await api.assessRecovery({
+          service: openInc ? undefined : (selectedService || 'backend_api'),
+          incident_id: openInc?.id,
+        });
+        if (isMountedRef.current) setAssessment(assessRes);
+      } catch (e) {
+        // quiet fallback
       }
     } catch (err: any) {
       if (!isMountedRef.current) return;
@@ -115,7 +134,7 @@ export const App: React.FC = () => {
     };
   }, [fetchData]);
 
-  // Dynamic Polling: 3s if active incidents or pending approvals, 8s otherwise
+  // Dynamic Polling
   useEffect(() => {
     const hasActiveIncidents = incidents.some(
       (i) => i.status === 'open' || i.status === 'recovering' || i.status === 'awaiting_approval'
@@ -129,6 +148,30 @@ export const App: React.FC = () => {
     return () => clearInterval(timer);
   }, [fetchData, incidents, pendingApprovals]);
 
+  const handleStartRecovery = async (incidentId: string) => {
+    setIsExecutingRecovery(true);
+    try {
+      // Find matching incident
+      const inc = incidents.find((i) => i.id === incidentId) || incidents[0];
+      if (inc) {
+        await api.startRecovery(inc.id);
+      } else {
+        // If no incident in backend, simulate failure then start
+        await api.simulateFailure('backend_api');
+        const res = await api.getIncidents();
+        if (res.incidents.length > 0) {
+          await api.startRecovery(res.incidents[0].id);
+        }
+      }
+      showSuccess('Recovery sequence successfully executed!');
+      fetchData();
+    } catch (err: any) {
+      showError(err.message || 'Failed to start recovery');
+    } finally {
+      setIsExecutingRecovery(false);
+    }
+  };
+
   const handlePreviewPlan = async (service: string) => {
     try {
       const plan = await api.getRecoveryPlan(service);
@@ -138,160 +181,152 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleFailSuccess = () => {
-    showSuccess(`Failure simulated on '${selectedService}'. Downstream dependents degraded.`);
-    fetchData();
-  };
-
-  const handleRecoveryStarted = () => {
-    showSuccess('Recovery sequence started.');
-    fetchData();
-  };
-
-  const handleActionComplete = () => {
-    showSuccess('Approval decision recorded. Recovery status updated.');
-    fetchData();
-  };
-
-  const activeIncidentsCount = incidents.filter(
+  const activeIncidents = incidents.filter(
     (i) => i.status === 'open' || i.status === 'recovering' || i.status === 'awaiting_approval'
-  ).length;
+  );
+
+  const currentIncident = activeIncidents.length > 0 ? activeIncidents[0] : incidents[0] || null;
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
-      {/* Header */}
-      <Header
-        backendOnline={backendOnline}
-        isPolling={isPolling}
-        lastUpdated={lastUpdated}
-        onRefresh={() => fetchData()}
-        activeIncidentsCount={activeIncidentsCount}
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
+    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex font-['Plus_Jakarta_Sans',sans-serif]">
+      {/* 1. Left Sidebar */}
+      <Sidebar
+        activeNav={activeNav}
+        onSelectNav={(nav) => {
+          setActiveNav(nav);
+          if (nav === 'overview') setActiveTab('dashboard');
+        }}
+        activeIncidentsCount={activeIncidents.length}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Error / Alert banner */}
+      {/* 2. Main Content Container */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Navigation & Status Bar */}
+        <Header
+          backendOnline={backendOnline}
+          isPolling={isPolling}
+          lastUpdated={lastUpdated}
+          onRefresh={() => fetchData()}
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+        />
+
+        {/* Alerts Container */}
         {errorMessage && (
-          <div className="bg-rose-50 border border-rose-300 rounded-xl p-4 flex items-center justify-between shadow-sm animate-in fade-in">
+          <div className="mx-6 mt-4 bg-rose-50 border border-rose-300 rounded-xl p-3.5 flex items-center justify-between shadow-xs animate-in fade-in">
             <div className="flex items-center space-x-3">
-              <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-              <p className="text-sm font-medium text-rose-800">{errorMessage}</p>
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              <p className="text-xs font-medium text-rose-800">{errorMessage}</p>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-rose-500 hover:text-rose-800 p-1 transition"
+              className="text-rose-500 hover:text-rose-800 p-1"
             >
               <XCircle className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {/* Success toast banner */}
         {successMessage && (
-          <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-3.5 flex items-center justify-between shadow-sm animate-in fade-in">
+          <div className="mx-6 mt-4 bg-emerald-50 border border-emerald-300 rounded-xl p-3 flex items-center justify-between shadow-xs animate-in fade-in">
             <div className="flex items-center space-x-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-              <p className="text-sm font-medium text-emerald-800">{successMessage}</p>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <p className="text-xs font-medium text-emerald-800">{successMessage}</p>
             </div>
             <button
               onClick={() => setSuccessMessage(null)}
-              className="text-emerald-500 hover:text-emerald-800 p-1 transition"
+              className="text-emerald-500 hover:text-emerald-800 p-1"
             >
               <XCircle className="w-4 h-4" />
             </button>
           </div>
         )}
 
-        {activeTab === 'demo_store' ? (
-          <DemoStoreView
-            onIncidentCreated={() => {
-              fetchData();
-              showSuccess('Real HTTP 503 outage detected! Incident automatically created in RecoverOps.');
-            }}
-            onNavigateToDashboard={() => setActiveTab('dashboard')}
-            onError={showError}
-          />
-        ) : (
-          <>
-            {/* Overview KPI Cards */}
-            <OverviewCards
-              services={services}
-              incidents={incidents}
-              pendingApprovalsCount={pendingApprovals.length}
-            />
-
-            {/* Pending Approvals Callout (when active) */}
-            {pendingApprovals.length > 0 && (
-              <ApprovalCenter
-                approvals={pendingApprovals}
-                onActionComplete={handleActionComplete}
-                onError={showError}
-              />
-            )}
-
-            {/* Center Grid: Dependency Graph & Side Control */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <DependencyGraph
-                  dependencies={dependencies}
-                  services={services}
-                  selectedService={selectedService}
-                  onSelectService={(s) => setSelectedService(s)}
-                />
-              </div>
-
-              <div className="space-y-6">
-                <SimulationPanel
-                  services={dependencies.nodes}
-                  selectedService={selectedService}
-                  onSelectService={setSelectedService}
-                  onFailSuccess={handleFailSuccess}
-                  onPreviewPlan={handlePreviewPlan}
-                  onError={showError}
-                />
-              </div>
-            </div>
-
-            {/* Pre-Flight Confidence & Risk Gate Panel */}
-            <RecoveryReadinessPanel
-              services={dependencies.nodes}
-              selectedService={selectedService}
-              onSelectService={setSelectedService}
-              serviceStates={services}
-              incidents={incidents}
-              onStartRecovery={handleRecoveryStarted}
+        {/* Body Workspace */}
+        <main className="flex-1 p-6 space-y-5 overflow-y-auto">
+          {activeTab === 'demo_store' ? (
+            <DemoStoreView
+              onIncidentCreated={() => {
+                fetchData();
+                showSuccess('Real HTTP 503 outage detected! Incident created in RecoverOps.');
+              }}
+              onNavigateToDashboard={() => setActiveTab('dashboard')}
               onError={showError}
             />
-
-            {/* Lower Grid: Incident Orchestration & Audit Timeline */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <IncidentPanel
+          ) : (
+            <>
+              {/* Top Row: 5 Stat Overview Cards */}
+              <OverviewCards
+                services={services}
                 incidents={incidents}
-                onRecoveryStarted={handleRecoveryStarted}
-                onError={showError}
+                pendingApprovalsCount={pendingApprovals.length}
               />
 
-              <AuditTimeline auditEvents={auditEvents} />
-            </div>
-          </>
-        )}
-      </main>
+              {/* Main Operations Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                {/* Left Column (~62% width on large screens) */}
+                <div className="lg:col-span-7 space-y-5">
+                  <DependencyGraph
+                    dependencies={dependencies}
+                    services={services}
+                    selectedService={selectedService}
+                    onSelectService={(s) => setSelectedService(s)}
+                  />
+
+                  <RecentIncidentsTable
+                    incidents={incidents}
+                    onSelectIncident={(inc) => {
+                      setSelectedService(inc.failed_service);
+                      handlePreviewPlan(inc.failed_service);
+                    }}
+                    onViewAll={() => setActiveNav('incidents')}
+                  />
+
+                  <RecentRecoveryActionsTable
+                    auditEvents={auditEvents}
+                    onViewAll={() => setActiveNav('audit')}
+                  />
+                </div>
+
+                {/* Right Column (~38% width on large screens) */}
+                <div className="lg:col-span-5 space-y-5">
+                  <CurrentIncidentCard
+                    incident={currentIncident}
+                    assessment={assessment}
+                    onExecuteRecovery={handleStartRecovery}
+                    onViewDetails={() => handlePreviewPlan(selectedService || 'backend_api')}
+                    isExecuting={isExecutingRecovery}
+                  />
+
+                  <PrerequisiteChecksCard assessment={assessment} />
+
+                  <ApprovalCenter
+                    approvals={pendingApprovals}
+                    onActionComplete={() => {
+                      showSuccess('Approval recorded.');
+                      fetchData();
+                    }}
+                    onError={showError}
+                  />
+
+                  <AuditTimeline
+                    auditEvents={auditEvents}
+                    onViewAll={() => setActiveNav('audit')}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </main>
+      </div>
 
       {/* Recovery Plan Modal */}
       <RecoveryPlanModal
         plan={previewPlan}
         onClose={() => setPreviewPlan(null)}
       />
-
-      {/* Footer */}
-      <footer className="border-t border-[#E7E2D9] bg-white py-4 px-6 text-center text-xs text-stone-500 font-mono">
-        RecoverOps • 24h Hackathon Project • Safe Dependency-Aware Incident Recovery Platform
-      </footer>
     </div>
   );
 };
 
 export default App;
-

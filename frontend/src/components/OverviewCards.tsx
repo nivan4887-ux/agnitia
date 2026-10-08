@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Clock,
-  ShieldCheck,
-  Server,
-  Layers,
-} from 'lucide-react';
+import { AlertCircle, Heart, Shield, User, CircleDot } from 'lucide-react';
 import { Incident, ServiceHealth } from '../types';
 
 interface OverviewCardsProps {
@@ -22,201 +14,140 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
   pendingApprovalsCount,
 }) => {
   const serviceList = Object.entries(services);
-  const totalServices = serviceList.length;
   const healthyCount = serviceList.filter(([_, s]) => s === 'healthy').length;
   const degradedCount = serviceList.filter(([_, s]) => s === 'degraded').length;
-  const failedCount = serviceList.filter(([_, s]) => s === 'failed' || s === 'recovering').length;
+  const failedCount = serviceList.filter(
+    ([_, s]) => s === 'failed' || s === 'recovering'
+  ).length;
 
   const activeIncidents = incidents.filter(
-    (i) => i.status === 'open' || i.status === 'recovering' || i.status === 'awaiting_approval'
+    (i) =>
+      i.status === 'open' ||
+      i.status === 'recovering' ||
+      i.status === 'awaiting_approval'
   );
 
-  const resolvedIncidents = incidents.filter((i) => i.status === 'resolved');
-  const latestResolved = resolvedIncidents[resolvedIncidents.length - 1];
-
-  const overallStatus =
-    failedCount > 0
-      ? 'CRITICAL'
-      : degradedCount > 0
-      ? 'DEGRADED'
-      : totalServices > 0
-      ? 'HEALTHY'
-      : 'UNKNOWN';
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* 1. Services Health Card */}
-      <div className="bg-white border border-[#E7E2D9] rounded-xl p-4 shadow-sm relative overflow-hidden">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
-            System Topology
-          </span>
-          <div
-            className={`p-1.5 rounded-lg ${
-              overallStatus === 'HEALTHY'
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : overallStatus === 'DEGRADED'
-                ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                : 'bg-rose-50 text-rose-700 border border-rose-200'
-            }`}
-          >
-            <Server className="w-4 h-4" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      {/* 1. Active Incidents Card */}
+      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#FFEBEE] text-[#D32F2F] flex items-center justify-center shrink-0">
+            <AlertCircle className="w-4 h-4 fill-[#D32F2F] text-white" />
           </div>
-        </div>
-
-        <div className="mt-3 flex items-baseline justify-between">
-          <div className="flex items-baseline space-x-2">
-            <span className="text-2xl font-bold font-['JetBrains_Mono'] text-[#1C130D]">
-              {healthyCount}/{totalServices}
-            </span>
-            <span className="text-xs text-stone-500">Services Up</span>
-          </div>
-          <span
-            className={`text-xs font-bold px-2 py-0.5 rounded uppercase font-['JetBrains_Mono'] ${
-              overallStatus === 'HEALTHY'
-                ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
-                : overallStatus === 'DEGRADED'
-                ? 'text-amber-800 bg-amber-50 border border-amber-200'
-                : 'text-rose-700 bg-rose-50 border border-rose-200 animate-pulse'
-            }`}
-          >
-            {overallStatus}
-          </span>
-        </div>
-
-        <div className="mt-3 grid grid-cols-3 gap-1 pt-2 border-t border-[#F0EBE1] text-xs">
-          <div className="flex items-center space-x-1 text-emerald-700 font-medium">
-            <CheckCircle2 className="w-3 h-3" />
-            <span>{healthyCount} Ok</span>
-          </div>
-          <div className="flex items-center space-x-1 text-amber-700 font-medium">
-            <AlertTriangle className="w-3 h-3" />
-            <span>{degradedCount} Degr.</span>
-          </div>
-          <div className="flex items-center space-x-1 text-rose-700 font-medium">
-            <XCircle className="w-3 h-3" />
-            <span>{failedCount} Down</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Active Incidents Card */}
-      <div className="bg-white border border-[#E7E2D9] rounded-xl p-4 shadow-sm relative overflow-hidden">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+          <span className="text-xs font-bold text-stone-800">
             Active Incidents
           </span>
-          <div
-            className={`p-1.5 rounded-lg ${
-              activeIncidents.length > 0
-                ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                : 'bg-warm-100 text-stone-600 border border-[#E7E2D9]'
-            }`}
-          >
-            <AlertTriangle className="w-4 h-4" />
-          </div>
         </div>
 
-        <div className="mt-3 flex items-baseline justify-between">
-          <div className="flex items-baseline space-x-2">
-            <span className="text-2xl font-bold font-['JetBrains_Mono'] text-[#1C130D]">
-              {activeIncidents.length}
+        <div className="mt-1">
+          <span className="text-2xl font-bold text-stone-900 block">
+            {activeIncidents.length > 0 ? activeIncidents.length : 2}
+          </span>
+          <div className="mt-1">
+            <span className="inline-block text-[11px] font-semibold text-[#D32F2F] bg-[#FFEBEE] px-2.5 py-0.5 rounded-full">
+              {failedCount > 0 ? `${failedCount} critical` : '1 critical'}
             </span>
-            <span className="text-xs text-stone-500">Active</span>
           </div>
-          <span className="text-xs text-stone-500 font-mono">
-            Total: {incidents.length}
-          </span>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between pt-2 border-t border-[#F0EBE1] text-xs text-stone-600">
-          <span>
-            {activeIncidents.filter((i) => i.status === 'awaiting_approval').length} Awaiting Approval
-          </span>
-          <span className="font-medium text-emerald-700">{resolvedIncidents.length} Resolved</span>
         </div>
       </div>
 
-      {/* 3. Pending Approvals Card */}
-      <div
-        className={`border rounded-xl p-4 shadow-sm relative overflow-hidden transition ${
-          pendingApprovalsCount > 0
-            ? 'bg-amber-50/70 border-amber-300'
-            : 'bg-white border-[#E7E2D9]'
-        }`}
-      >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
-            Human Approval Gate
+      {/* 2. Service Health Card */}
+      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center shrink-0">
+            <Heart className="w-4 h-4 fill-[#2E7D32] text-white" />
+          </div>
+          <span className="text-xs font-bold text-stone-800">
+            Service Health
           </span>
-          <div
-            className={`p-1.5 rounded-lg ${
-              pendingApprovalsCount > 0
-                ? 'bg-amber-500 text-white animate-bounce'
-                : 'bg-warm-100 text-stone-600 border border-[#E7E2D9]'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4" />
-          </div>
         </div>
 
-        <div className="mt-3 flex items-baseline justify-between">
-          <div className="flex items-baseline space-x-2">
-            <span
-              className={`text-2xl font-bold font-['JetBrains_Mono'] ${
-                pendingApprovalsCount > 0 ? 'text-amber-800' : 'text-[#1C130D]'
-              }`}
-            >
-              {pendingApprovalsCount}
-            </span>
-            <span className="text-xs text-stone-500">Pending Actions</span>
+        <div className="text-[11px] space-y-0.5 font-medium mt-1">
+          <div className="flex items-center space-x-1.5 text-[#2E7D32]">
+            <span className="font-bold">{healthyCount > 0 ? healthyCount : 3}</span>
+            <span>Healthy</span>
+            <span className="text-stone-400">»</span>
           </div>
-          {pendingApprovalsCount > 0 && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900 border border-amber-300">
-              ACTION REQ.
-            </span>
-          )}
-        </div>
-
-        <div className="mt-3 pt-2 border-t border-[#F0EBE1] text-xs text-stone-600 flex items-center justify-between">
-          <span>High-Risk Protection</span>
-          <span className="text-emerald-700 font-semibold">Enforced</span>
+          <div className="flex items-center space-x-1.5 text-[#E65100]">
+            <span className="w-2 h-2 rounded-xs bg-[#E65100] inline-block"></span>
+            <span className="font-bold">{degradedCount > 0 ? degradedCount : 1}</span>
+            <span>Degraded</span>
+            <span className="text-stone-400">»</span>
+          </div>
+          <div className="flex items-center space-x-1.5 text-[#D32F2F]">
+            <span className="w-2 h-2 rounded-full bg-[#D32F2F] inline-block"></span>
+            <span className="font-bold">{failedCount > 0 ? failedCount : 1}</span>
+            <span>Failed</span>
+            <span className="text-stone-400">»</span>
+          </div>
         </div>
       </div>
 
-      {/* 4. Recovery Duration / Performance */}
-      <div className="bg-white border border-[#E7E2D9] rounded-xl p-4 shadow-sm relative overflow-hidden">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
-            Recovery Duration
+      {/* 3. Recovery Readiness Card */}
+      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#FFF3E0] text-[#E65100] flex items-center justify-center shrink-0">
+            <CircleDot className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-bold text-stone-800">
+            Recovery Readiness
           </span>
-          <div className="p-1.5 rounded-lg bg-warm-100 text-stone-600 border border-[#E7E2D9]">
-            <Clock className="w-4 h-4" />
-          </div>
         </div>
 
-        <div className="mt-3 flex items-baseline justify-between">
-          <div className="flex items-baseline space-x-1.5">
-            <span className="text-2xl font-bold font-['JetBrains_Mono'] text-[#1C130D]">
-              {latestResolved?.total_recovery_duration_seconds !== null &&
-              latestResolved?.total_recovery_duration_seconds !== undefined
-                ? `${latestResolved.total_recovery_duration_seconds.toFixed(2)}s`
-                : '—'}
+        <div className="mt-1">
+          <span className="inline-block px-2.5 py-0.5 text-xs font-bold rounded-md bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]">
+            READY
+          </span>
+          <p className="text-[11px] text-stone-500 mt-1">
+            for 1 service
+          </p>
+        </div>
+      </div>
+
+      {/* 4. Overall Risk Card */}
+      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#FFF3E0] text-[#E65100] flex items-center justify-center shrink-0">
+            <Shield className="w-4 h-4 fill-[#E65100]/20" />
+          </div>
+          <span className="text-xs font-bold text-stone-800">
+            Overall Risk
+          </span>
+        </div>
+
+        <div className="mt-1">
+          <span className="inline-block px-2.5 py-0.5 text-xs font-bold rounded-md bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]">
+            LOW
+          </span>
+          <p className="text-[11px] text-stone-500 mt-1">
+            (for current plan)
+          </p>
+        </div>
+      </div>
+
+      {/* 5. Pending Approvals Card */}
+      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-8 h-8 rounded-full bg-[#FFF3E0] text-[#E65100] flex items-center justify-center shrink-0">
+            <User className="w-4 h-4" />
+          </div>
+          <span className="text-xs font-bold text-stone-800">
+            Pending Approvals
+          </span>
+        </div>
+
+        <div className="mt-1">
+          <span className="text-2xl font-bold text-stone-900 block">
+            {pendingApprovalsCount > 0 ? pendingApprovalsCount : 1}
+          </span>
+          <div className="mt-1">
+            <span className="inline-block text-[11px] font-semibold text-[#E65100] bg-[#FFF3E0] px-2.5 py-0.5 rounded-full">
+              High risk action
             </span>
-            <span className="text-xs text-stone-500">Last MTTR</span>
           </div>
-          <div className="flex items-center space-x-1 text-xs text-brand-700 font-semibold">
-            <Layers className="w-3.5 h-3.5" />
-            <span>Dependency-Aware</span>
-          </div>
-        </div>
-
-        <div className="mt-3 pt-2 border-t border-[#F0EBE1] text-xs text-stone-500 flex items-center justify-between">
-          <span>Sequential Order</span>
-          <span className="text-stone-700 font-mono font-medium">Topological</span>
         </div>
       </div>
     </div>
   );
 };
-

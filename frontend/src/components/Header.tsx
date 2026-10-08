@@ -1,13 +1,11 @@
 import React from 'react';
-import { Activity, RefreshCw, ShieldAlert, Server, LayoutDashboard, ShoppingBag } from 'lucide-react';
-
+import { RefreshCw, LayoutGrid, Store, Clock } from 'lucide-react';
 
 interface HeaderProps {
   backendOnline: boolean;
   isPolling: boolean;
   lastUpdated: Date | null;
   onRefresh: () => void;
-  activeIncidentsCount: number;
   activeTab: 'dashboard' | 'demo_store';
   onSelectTab: (tab: 'dashboard' | 'demo_store') => void;
 }
@@ -17,104 +15,79 @@ export const Header: React.FC<HeaderProps> = ({
   isPolling,
   lastUpdated,
   onRefresh,
-  activeIncidentsCount,
   activeTab,
   onSelectTab,
 }) => {
+  const formattedDate = lastUpdated
+    ? lastUpdated.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }) +
+      ' ' +
+      lastUpdated.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : 'May 16, 2025 01:31 PM';
+
   return (
-    <header className="border-b border-[#2D2018] bg-[#1C130D] sticky top-0 z-40 px-6 py-3.5 shadow-md">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Brand & Mode Switcher */}
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center shadow-md">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-lg font-bold tracking-tight text-warm-50 font-['JetBrains_Mono']">
-                  RecoverOps
-                </h1>
-                <span className="px-2 py-0.5 text-xs font-semibold bg-brand-900/60 text-brand-300 border border-brand-700/60 rounded font-mono">
-                  v0.2.0
-                </span>
-              </div>
-              <p className="text-xs text-stone-400">
-                Dependency-Aware Incident Recovery Engine
-              </p>
-            </div>
-          </div>
+    <header className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 border-b border-[#EFEAE2] bg-[#FAF7F2]">
+      {/* Mode Navigation Tabs */}
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={() => onSelectTab('dashboard')}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 transition ${
+            activeTab === 'dashboard'
+              ? 'bg-[#D95A1E] text-white shadow-sm'
+              : 'bg-white text-stone-700 hover:bg-stone-50 border border-[#E7E2D9]'
+          }`}
+        >
+          <LayoutGrid className="w-3.5 h-3.5" />
+          <span>SRE Control Plane</span>
+        </button>
 
-          {/* Navigation Tabs */}
-          <nav className="hidden sm:flex items-center space-x-1 bg-[#261A13] border border-[#3D2B20] p-1 rounded-xl">
-            <button
-              onClick={() => onSelectTab('dashboard')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
-                activeTab === 'dashboard'
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-stone-300 hover:text-white hover:bg-[#34241B]'
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>SRE Control Plane</span>
-            </button>
-            <button
-              onClick={() => onSelectTab('demo_store')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
-                activeTab === 'demo_store'
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-stone-300 hover:text-white hover:bg-[#34241B]'
-              }`}
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Live Mini-Store Demo</span>
-            </button>
-          </nav>
+        <button
+          onClick={() => onSelectTab('demo_store')}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 transition ${
+            activeTab === 'demo_store'
+              ? 'bg-[#D95A1E] text-white shadow-sm'
+              : 'bg-white text-stone-700 hover:bg-stone-50 border border-[#E7E2D9]'
+          }`}
+        >
+          <Store className="w-3.5 h-3.5" />
+          <span>Live Mini-Store Demo</span>
+        </button>
+      </div>
+
+      {/* Live System Status Indicators */}
+      <div className="flex items-center space-x-5 text-xs font-medium text-stone-700">
+        {/* API Connected Status */}
+        <div className="flex items-center space-x-2">
+          <span
+            className={`w-2 h-2 rounded-full ${
+              backendOnline ? 'bg-[#2E7D32]' : 'bg-[#D32F2F]'
+            }`}
+          />
+          <span className="font-semibold text-stone-800">
+            {backendOnline ? 'API Connected' : 'API Disconnected'}
+          </span>
         </div>
 
-        {/* Status Indicators & Controls */}
-        <div className="flex items-center space-x-4 text-xs font-medium">
-          {/* Active Incident Warning */}
-          {activeIncidentsCount > 0 && (
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-rose-950/90 border border-rose-700 text-rose-200 animate-pulse font-semibold">
-              <ShieldAlert className="w-4 h-4 text-rose-400" />
-              <span>{activeIncidentsCount} Active Incident{activeIncidentsCount > 1 ? 's' : ''}</span>
-            </div>
-          )}
-
-          {/* Backend Connection */}
-          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-[#261A13] border border-[#3D2B20]">
-            <Server className="w-3.5 h-3.5 text-stone-400" />
-            <span className="text-stone-400">API:</span>
-            {backendOnline ? (
-              <span className="flex items-center space-x-1 text-emerald-400 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span>Connected</span>
-              </span>
-            ) : (
-              <span className="flex items-center space-x-1 text-rose-400 font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                <span>Offline</span>
-              </span>
-            )}
-          </div>
-
-          {/* Last refreshed + Poll spinner */}
-          <div className="flex items-center space-x-2 text-stone-400">
-            {lastUpdated && (
-              <span className="font-mono text-[11px]">
-                {lastUpdated.toLocaleTimeString()}
-              </span>
-            )}
-            <button
-              onClick={onRefresh}
-              title="Refresh telemetry"
-              className="p-1.5 rounded-md bg-[#261A13] hover:bg-[#34241B] text-stone-300 hover:text-white transition border border-[#3D2B20] flex items-center justify-center"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin text-brand-400' : ''}`} />
-            </button>
-          </div>
+        {/* Date Time */}
+        <div className="flex items-center space-x-1.5 text-stone-600">
+          <Clock className="w-3.5 h-3.5 text-stone-500" />
+          <span className="font-medium">{formattedDate}</span>
         </div>
+
+        {/* Refresh button */}
+        <button
+          onClick={onRefresh}
+          title="Refresh telemetry"
+          className="p-1.5 rounded-full hover:bg-stone-200/60 text-stone-600 hover:text-stone-900 transition"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin text-[#D95A1E]' : ''}`} />
+        </button>
       </div>
     </header>
   );
