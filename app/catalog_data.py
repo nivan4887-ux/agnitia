@@ -742,3 +742,4 @@ DEMO_PRODUCTS = [
         "description": "Structured box clutch featuring metallic Banarasi silk outer, detachable gold chain strap, and crystal clasp closure.",
     },
 ]
+
