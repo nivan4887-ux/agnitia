@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, RefreshCw, ShieldAlert, Server } from 'lucide-react';
+import { Activity, RefreshCw, ShieldAlert, Server, LayoutDashboard, ShoppingBag } from 'lucide-react';
 
 
 interface HeaderProps {
@@ -8,6 +8,8 @@ interface HeaderProps {
   lastUpdated: Date | null;
   onRefresh: () => void;
   activeIncidentsCount: number;
+  activeTab: 'dashboard' | 'demo_store';
+  onSelectTab: (tab: 'dashboard' | 'demo_store') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,28 +18,58 @@ export const Header: React.FC<HeaderProps> = ({
   lastUpdated,
   onRefresh,
   activeIncidentsCount,
+  activeTab,
+  onSelectTab,
 }) => {
   return (
     <header className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-40 px-6 py-3.5">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Brand */}
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-            <Activity className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-lg font-bold tracking-tight text-white font-['JetBrains_Mono']">
-                RecoverOps
-              </h1>
-              <span className="px-2 py-0.5 text-xs font-semibold bg-cyan-950 text-cyan-400 border border-cyan-800 rounded">
-                v0.2.0
-              </span>
+        {/* Brand & Mode Switcher */}
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+              <Activity className="w-5 h-5 text-white" />
             </div>
-            <p className="text-xs text-slate-400">
-              Dependency-Aware Incident Recovery Engine
-            </p>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-lg font-bold tracking-tight text-white font-['JetBrains_Mono']">
+                  RecoverOps
+                </h1>
+                <span className="px-2 py-0.5 text-xs font-semibold bg-cyan-950 text-cyan-400 border border-cyan-800 rounded">
+                  v0.2.0
+                </span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Dependency-Aware Incident Recovery Engine
+              </p>
+            </div>
           </div>
+
+          {/* Navigation Tabs */}
+          <nav className="hidden sm:flex items-center space-x-1 bg-slate-900/90 border border-slate-800 p-1 rounded-xl">
+            <button
+              onClick={() => onSelectTab('dashboard')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
+                activeTab === 'dashboard'
+                  ? 'bg-cyan-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>SRE Control Plane</span>
+            </button>
+            <button
+              onClick={() => onSelectTab('demo_store')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
+                activeTab === 'demo_store'
+                  ? 'bg-cyan-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Live Mini-Store Demo</span>
+            </button>
+          </nav>
         </div>
 
         {/* Status Indicators & Controls */}

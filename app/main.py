@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app import engine, graph, state
+from app import demo_store, engine, graph, live_adapter, risk_gate, state
 
 app = FastAPI(
     title="RecoverOps",
@@ -25,6 +25,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(demo_store.router)
 
 dep_graph = graph.build_graph()
 
@@ -45,6 +47,12 @@ class SimulationConfigRequest(BaseModel):
     risk_level: Optional[str] = None
     action_error: Optional[str] = None
     health_check_error: Optional[str] = None
+
+
+class RecoveryAssessRequest(BaseModel):
+    service: Optional[str] = None
+    incident_id: Optional[str] = None
+    expected_state_fingerprint: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -111,6 +119,21 @@ def recovery_plan(service_name: str):
         "service": service_name,
         "recovery_order": order,
     }
+
+
+@app.post("/recovery/assess")
+def assess_recovery(payload: Optional[RecoveryAssessRequest] = None):
+    """Assess recovery readiness deterministically using graph topology, playbooks, and state."""
+    service_name = payload.service if payload else None
+    incident_id = payload.incident_id if payload else None
+    fingerprint = payload.expected_state_fingerprint if payload else None
+
+    result = risk_gate.assess_recovery_readiness(
+        service_name=service_name,
+        incident_id=incident_id,
+        expected_state_fingerprint=fingerprint,
+    )
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -201,3 +224,11 @@ def configure_simulation(payload: SimulationConfigRequest):
         health_check_error=payload.health_check_error,
     )
     return {"status": "configured", "service": payload.service}
+
+
+@app.post("/live/probe")
+def run_live_probe_endpoint(auto_create_incident: bool = Query(True)):
+    """Execute live HTTP health and products probe, auto-creating a real incident on failure."""
+    result = live_adapter.run_live_health_probe(auto_create_incident=auto_create_incident)
+    return result
+

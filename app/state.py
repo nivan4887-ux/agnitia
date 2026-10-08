@@ -37,6 +37,11 @@ def reset_state() -> None:
         approvals.clear()
         audit_log.clear()
         simulation_overrides.clear()
+        try:
+            from app import demo_store
+            demo_store.reset_demo_store()
+        except ImportError:
+            pass
 
 
 

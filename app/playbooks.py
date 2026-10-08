@@ -71,11 +71,9 @@ def get_playbook(service: str) -> dict[str, Any]:
 
 
 def execute_simulated_action(service: str, playbook: dict[str, Any]) -> dict[str, Any]:
-    """Execute the simulated recovery action for *service*.
-
-    Returns a status dict containing the execution outcome and details.
-    """
+    """Execute the recovery action for *service* using allowlisted adapter or simulation."""
     from app.state import simulation_overrides
+    from app import live_adapter
 
     override = simulation_overrides.get(service, {})
     success = override.get("action_success", True)
@@ -89,37 +87,57 @@ def execute_simulated_action(service: str, playbook: dict[str, Any]) -> dict[str
             "message": error_msg or f"Simulated failure executing {playbook.get('action')} on {service}",
         }
 
+    # Execute allowlisted live adapter for live demo targets
+    live_res = live_adapter.execute_allowlisted_action(service, playbook.get("action", "restart_service"))
+    if not live_res.get("success"):
+        return {
+            "success": False,
+            "action": playbook.get("action", "unknown_action"),
+            "risk_level": playbook.get("risk_level", "safe"),
+            "message": live_res.get("error", "Allowlisted adapter execution failed"),
+        }
+
     return {
         "success": True,
         "action": playbook.get("action", "unknown_action"),
         "risk_level": playbook.get("risk_level", "safe"),
-        "message": f"Successfully executed simulated action {playbook.get('action')} on {service}",
+        "message": f"Successfully executed action '{playbook.get('action')}' on {service}",
     }
 
 
 def run_simulated_health_check(service: str, playbook: dict[str, Any]) -> dict[str, Any]:
-    """Execute the simulated post-recovery health check for *service*.
-
-    Returns a verification dict with passed status and probe details.
-    """
+    """Execute the post-recovery health check for *service*, verifying live HTTP probes when applicable."""
     from app.state import simulation_overrides
+    from app import live_adapter
 
     override = simulation_overrides.get(service, {})
-    passed = override.get("health_check_success", True)
+    passed = override.get("health_check_success", None)
     error_msg = override.get("health_check_error", None)
 
     check_type = playbook.get("health_check_type", "synthetic_probe")
 
-    if not passed:
+    # If an explicit simulation override was set, honor it
+    if passed is not None:
+        if not passed:
+            return {
+                "passed": False,
+                "health_check_type": check_type,
+                "message": error_msg or f"Health check failed for {service} ({check_type})",
+            }
         return {
-            "passed": False,
+            "passed": True,
             "health_check_type": check_type,
-            "message": error_msg or f"Health check failed for {service} ({check_type})",
+            "message": f"Health check passed for {service} ({check_type})",
         }
+
+    # Live HTTP probe verification for backend_api demo service
+    if service == "backend_api":
+        return live_adapter.verify_live_service_health(service)
 
     return {
         "passed": True,
         "health_check_type": check_type,
         "message": f"Health check passed for {service} ({check_type})",
     }
+
 

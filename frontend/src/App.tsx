@@ -16,10 +16,13 @@ import { IncidentPanel } from './components/IncidentPanel';
 import { ApprovalCenter } from './components/ApprovalCenter';
 import { AuditTimeline } from './components/AuditTimeline';
 import { RecoveryPlanModal } from './components/RecoveryPlanModal';
+import { RecoveryReadinessPanel } from './components/RecoveryReadinessPanel';
+import { DemoStoreView } from './components/DemoStoreView';
 import { AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   // State
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'demo_store'>('dashboard');
   const [backendOnline, setBackendOnline] = useState<boolean>(false);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -163,6 +166,8 @@ export const App: React.FC = () => {
         lastUpdated={lastUpdated}
         onRefresh={() => fetchData()}
         activeIncidentsCount={activeIncidentsCount}
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
       />
 
       {/* Main Container */}
@@ -199,55 +204,79 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Overview KPI Cards */}
-        <OverviewCards
-          services={services}
-          incidents={incidents}
-          pendingApprovalsCount={pendingApprovals.length}
-        />
-
-        {/* Pending Approvals Callout (when active) */}
-        {pendingApprovals.length > 0 && (
-          <ApprovalCenter
-            approvals={pendingApprovals}
-            onActionComplete={handleActionComplete}
+        {activeTab === 'demo_store' ? (
+          <DemoStoreView
+            onIncidentCreated={() => {
+              fetchData();
+              showSuccess('Real HTTP 503 outage detected! Incident automatically created in RecoverOps.');
+            }}
+            onNavigateToDashboard={() => setActiveTab('dashboard')}
             onError={showError}
           />
-        )}
-
-        {/* Center Grid: Dependency Graph & Side Control */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <DependencyGraph
-              dependencies={dependencies}
+        ) : (
+          <>
+            {/* Overview KPI Cards */}
+            <OverviewCards
               services={services}
-              selectedService={selectedService}
-              onSelectService={(s) => setSelectedService(s)}
+              incidents={incidents}
+              pendingApprovalsCount={pendingApprovals.length}
             />
-          </div>
 
-          <div className="space-y-6">
-            <SimulationPanel
+            {/* Pending Approvals Callout (when active) */}
+            {pendingApprovals.length > 0 && (
+              <ApprovalCenter
+                approvals={pendingApprovals}
+                onActionComplete={handleActionComplete}
+                onError={showError}
+              />
+            )}
+
+            {/* Center Grid: Dependency Graph & Side Control */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <DependencyGraph
+                  dependencies={dependencies}
+                  services={services}
+                  selectedService={selectedService}
+                  onSelectService={(s) => setSelectedService(s)}
+                />
+              </div>
+
+              <div className="space-y-6">
+                <SimulationPanel
+                  services={dependencies.nodes}
+                  selectedService={selectedService}
+                  onSelectService={setSelectedService}
+                  onFailSuccess={handleFailSuccess}
+                  onPreviewPlan={handlePreviewPlan}
+                  onError={showError}
+                />
+              </div>
+            </div>
+
+            {/* Pre-Flight Confidence & Risk Gate Panel */}
+            <RecoveryReadinessPanel
               services={dependencies.nodes}
               selectedService={selectedService}
               onSelectService={setSelectedService}
-              onFailSuccess={handleFailSuccess}
-              onPreviewPlan={handlePreviewPlan}
+              serviceStates={services}
+              incidents={incidents}
+              onStartRecovery={handleRecoveryStarted}
               onError={showError}
             />
-          </div>
-        </div>
 
-        {/* Lower Grid: Incident Orchestration & Audit Timeline */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <IncidentPanel
-            incidents={incidents}
-            onRecoveryStarted={handleRecoveryStarted}
-            onError={showError}
-          />
+            {/* Lower Grid: Incident Orchestration & Audit Timeline */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <IncidentPanel
+                incidents={incidents}
+                onRecoveryStarted={handleRecoveryStarted}
+                onError={showError}
+              />
 
-          <AuditTimeline auditEvents={auditEvents} />
-        </div>
+              <AuditTimeline auditEvents={auditEvents} />
+            </div>
+          </>
+        )}
       </main>
 
       {/* Recovery Plan Modal */}

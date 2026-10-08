@@ -555,3 +555,133 @@ class TestMilestone2RecoveryEngine:
         r_apprv = client.post(f"/approvals/{apprv_id}/approve")
         assert r_apprv.status_code == 400
         assert "not the active pending approval" in r_apprv.json()["detail"]
+
+
+# ===========================================================================
+# Milestone 4: Recovery Confidence & Risk Gate Tests
+# ===========================================================================
+
+class TestRecoveryConfidenceAndRiskGate:
+    def test_assess_safe_service_ready_status(self):
+        """Assessing a safe leaf service with all healthy dependencies returns READY and LOW risk."""
+        r = client.post("/recovery/assess", json={"service": "website"})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["readiness_status"] == "READY"
+        assert data["risk_level"] == "LOW"
+        assert data["target_service"] == "website"
+        assert len(data["required_approvals"]) == 0
+        assert len(data["blocked_actions"]) == 0
+        assert "READY" in data["summary"]
+        assert data["state_fingerprint"] is not None
+
+    def test_assess_high_risk_service_needs_approval(self):
+        """Assessing database identifies high-risk playbook and returns NEEDS_APPROVAL with HIGH risk."""
+        r = client.post("/recovery/assess", json={"service": "database"})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["readiness_status"] == "NEEDS_APPROVAL"
+        assert data["risk_level"] == "HIGH"
+        assert data["target_service"] == "database"
+        assert len(data["required_approvals"]) == 1
+        assert data["required_approvals"][0]["service"] == "database"
+        assert data["required_approvals"][0]["action"] == "restore_backup_and_restart"
+        assert any(f["code"] == "HIGH_RISK_ACTION_REQUIRED" for f in data["findings"])
+
+    def test_assess_unhealthy_upstream_dependencies_blocked(self):
+        """If upstream dependencies are unhealthy and outside the recovery plan, status is BLOCKED."""
+        # Directly fail database without cascading for this test
+        state.service_states["database"] = "failed"
+
+        # Attempt to assess downstream website alone
+        r = client.post("/recovery/assess", json={"service": "website"})
+        assert r.status_code == 200
+        data = r.json()
+        # website depends on order_service and payment_service
+        state.service_states["order_service"] = "failed"
+        r2 = client.post("/recovery/assess", json={"service": "website"})
+        data2 = r2.json()
+        assert data2["readiness_status"] == "BLOCKED"
+        assert any(f["code"] == "UNHEALTHY_UPSTREAM_DEPENDENCY" for f in data2["findings"])
+        assert len(data2["blocked_actions"]) > 0
+
+    def test_assess_invalid_service_blocked(self):
+        """Unknown service is rejected with BLOCKED and INVALID_SERVICE finding."""
+        r = client.post("/recovery/assess", json={"service": "non_existent_microservice"})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["readiness_status"] == "BLOCKED"
+        assert data["risk_level"] == "HIGH"
+        assert any(f["code"] == "INVALID_SERVICE" for f in data["findings"])
+
+    def test_assess_cycle_detected_blocked(self, monkeypatch):
+        """Cyclic graph causes risk gate to block recovery with CYCLE_DETECTED."""
+        from app import graph
+        def mock_detect_cycles(g):
+            return [("website", "database")]
+
+        monkeypatch.setattr(graph, "detect_cycles", mock_detect_cycles)
+
+        r = client.post("/recovery/assess", json={"service": "website"})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["readiness_status"] == "BLOCKED"
+        assert data["risk_level"] == "HIGH"
+        assert any(f["code"] == "CYCLE_DETECTED" for f in data["findings"])
+
+    def test_assess_stale_fingerprint_flagged(self):
+        """Providing an outdated state fingerprint sets is_stale to True and adds STALE_ASSESSMENT finding."""
+        r1 = client.post("/recovery/assess", json={"service": "backend_api"})
+        assert r1.status_code == 200
+        old_fingerprint = r1.json()["state_fingerprint"]
+
+        # Mutate system state
+        state.service_states["payment_service"] = "failed"
+
+        # Re-assess with old fingerprint passed
+        r2 = client.post("/recovery/assess", json={
+            "service": "backend_api",
+            "expected_state_fingerprint": old_fingerprint,
+        })
+        assert r2.status_code == 200
+        data2 = r2.json()
+        assert data2["is_stale"] is True
+        assert any(f["code"] == "STALE_ASSESSMENT" for f in data2["findings"])
+
+    def test_assess_with_incident_lifecycle(self):
+        """Assessing an active incident accurately reflects its lifecycle states."""
+        # 1. Fail database
+        r_fail = client.post("/simulate/fail/database")
+        incident_id = r_fail.json()["incident"]["id"]
+
+        # Open incident
+        r_open = client.post("/recovery/assess", json={"incident_id": incident_id})
+        assert r_open.status_code == 200
+        assert r_open.json()["readiness_status"] == "NEEDS_APPROVAL"
+
+        # Start recovery -> pauses in awaiting_approval
+        client.post(f"/recovery/start/{incident_id}")
+        r_awaiting = client.post("/recovery/assess", json={"incident_id": incident_id})
+        assert r_awaiting.status_code == 200
+        assert r_awaiting.json()["readiness_status"] == "NEEDS_APPROVAL"
+        assert any(f["code"] == "APPROVAL_PENDING" for f in r_awaiting.json()["findings"])
+
+        # Approve and finish recovery
+        apprv_id = client.get("/approvals/pending").json()["pending_approvals"][0]["id"]
+        client.post(f"/approvals/{apprv_id}/approve")
+
+        # Resolved incident
+        r_resolved = client.post("/recovery/assess", json={"incident_id": incident_id})
+        assert r_resolved.status_code == 200
+        assert r_resolved.json()["readiness_status"] == "READY"
+        assert r_resolved.json()["risk_level"] == "LOW"
+        assert any(f["code"] == "INCIDENT_RESOLVED" for f in r_resolved.json()["findings"])
+
+    def test_assess_missing_target_returns_blocked(self):
+        """Omitting both service and incident returns BLOCKED with MISSING_TARGET finding."""
+        r = client.post("/recovery/assess", json={})
+        assert r.status_code == 200
+        data = r.json()
+        assert data["readiness_status"] == "BLOCKED"
+        assert any(f["code"] == "MISSING_TARGET" for f in data["findings"])
+

@@ -71,3 +71,84 @@ export interface RecoveryPlanResponse {
   recovery_order: string[];
 }
 
+export type ReadinessStatus = 'READY' | 'NEEDS_APPROVAL' | 'BLOCKED';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+export type FindingSeverity = 'info' | 'warning' | 'error' | 'critical';
+
+export interface AssessmentFinding {
+  severity: FindingSeverity;
+  code: string;
+  message: string;
+  affected_service: string | null;
+}
+
+export interface RequiredApproval {
+  service: string;
+  action: string;
+  risk_level: string;
+  description: string;
+}
+
+export interface BlockedAction {
+  service: string;
+  reason: string;
+}
+
+export interface RecoveryAssessment {
+  readiness_status: ReadinessStatus;
+  risk_level: RiskLevel;
+  target_service?: string;
+  recovery_order?: string[];
+  downstream_impact?: string[];
+  summary: string;
+  findings: AssessmentFinding[];
+  required_approvals: RequiredApproval[];
+  blocked_actions: BlockedAction[];
+  recommended_next_step: string;
+  is_stale?: boolean;
+  state_fingerprint: string;
+  assessed_at: string;
+}
+
+export interface DemoProduct {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  in_stock: boolean;
+  stock_count: number;
+  description: string;
+}
+
+export interface DemoHealthResponse {
+  status: 'healthy' | 'unhealthy';
+  service: string;
+  database_connected?: boolean;
+  latency_ms?: number;
+  error?: string;
+  error_code?: string;
+}
+
+export interface LiveProbeResult {
+  is_healthy: boolean;
+  service: string;
+  health_probe: {
+    healthy: boolean;
+    status_code: number;
+    endpoint: string;
+    error?: string;
+    error_code?: string;
+  };
+  products_probe: {
+    healthy: boolean;
+    status_code: number;
+    endpoint: string;
+    products_returned?: number;
+    error?: string;
+  };
+  incident?: Incident | null;
+  timestamp: string;
+}
+
+
+

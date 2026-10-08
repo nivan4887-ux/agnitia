@@ -1,8 +1,12 @@
 import {
   Approval,
   AuditEvent,
+  DemoHealthResponse,
+  DemoProduct,
   DependenciesResponse,
   Incident,
+  LiveProbeResult,
+  RecoveryAssessment,
   RecoveryPlanResponse,
   ServiceHealth,
 } from '../types';
@@ -128,5 +132,46 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+
+  assessRecovery: async (params: {
+    service?: string;
+    incident_id?: string;
+    expected_state_fingerprint?: string;
+  }): Promise<RecoveryAssessment> => {
+    return fetchJson(`${API_BASE_URL}/recovery/assess`, {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  // Demo Mini-Store & Live Probe APIs
+  getDemoProducts: async (): Promise<{ status: string; products: DemoProduct[]; item_count: number }> => {
+    return fetchJson(`${API_BASE_URL}/demo/products`);
+  },
+
+  getDemoHealth: async (): Promise<DemoHealthResponse> => {
+    return fetchJson(`${API_BASE_URL}/demo/health`);
+  },
+
+  injectDemoChaos: async (reason?: string): Promise<{ status: string; service: string; reason: string }> => {
+    return fetchJson(`${API_BASE_URL}/demo/chaos/fail`, {
+      method: 'POST',
+      body: JSON.stringify({ reason: reason || null }),
+    });
+  },
+
+  restoreDemoService: async (): Promise<{ status: string; service: string; message: string }> => {
+    return fetchJson(`${API_BASE_URL}/demo/chaos/restore`, {
+      method: 'POST',
+    });
+  },
+
+  runLiveProbe: async (autoCreateIncident: boolean = true): Promise<LiveProbeResult> => {
+    return fetchJson(`${API_BASE_URL}/live/probe?auto_create_incident=${autoCreateIncident}`, {
+      method: 'POST',
+    });
+  },
 };
+
+
 
