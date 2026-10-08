@@ -122,13 +122,13 @@ const nodeTypes = {
 // Row 3 (y=200): products_api, order_service, payment_service
 // Row 4 (y=290): website
 const SERVICE_POSITIONS: Record<string, { x: number; y: number }> = {
-  frontend: { x: 230, y: 15 },
-  backend_api: { x: 230, y: 105 },
-  products_api: { x: 50, y: 195 },
-  order_service: { x: 230, y: 195 },
-  payment_service: { x: 410, y: 195 },
-  website: { x: 230, y: 285 },
-  database: { x: 50, y: 15 },
+  database: { x: 200, y: 15 },
+  frontend: { x: 200, y: 15 },
+  backend_api: { x: 200, y: 105 },
+  products_api: { x: 20, y: 195 },
+  order_service: { x: 100, y: 195 },
+  payment_service: { x: 300, y: 195 },
+  website: { x: 200, y: 285 },
 };
 
 export const DependencyGraph: React.FC<DependencyGraphProps> = ({
@@ -235,9 +235,14 @@ export const DependencyGraph: React.FC<DependencyGraphProps> = ({
           nodeTypes={nodeTypes}
           onNodeClick={(_, node) => onSelectService(node.id)}
           fitView
-          fitViewOptions={{ padding: 0.15 }}
-          nodesDraggable={true}
-          nodesConnectable={false}
+          fitViewOptions={{ padding: 0.18 }}
+          zoomOnScroll={false}
+          panOnScroll={false}
+          zoomOnPinch={false}
+          zoomOnDoubleClick={false}
+          preventScrolling={false}
+          nodesDraggable={false}
+          panOnDrag={false}
           elementsSelectable={true}
           proOptions={{ hideAttribution: true }}
         >
