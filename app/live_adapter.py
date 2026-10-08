@@ -171,10 +171,10 @@ def verify_live_service_health(service: str) -> dict[str, Any]:
             "products_probe": products_probe,
         }
 
-    # For other simulated services in graph, return synthetic pass
+    # For services without a designated live HTTP endpoint, reject target confusion
     return {
-        "passed": True,
-        "health_check_type": "synthetic_probe",
-        "message": f"Synthetic health check passed for {service}",
+        "passed": False,
+        "health_check_type": "invalid_live_target",
+        "message": f"Service '{service}' has no configured live HTTP verification probe endpoint.",
     }
 
