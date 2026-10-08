@@ -20,6 +20,11 @@ import { RecentIncidentsTable } from './components/RecentIncidentsTable';
 import { RecentRecoveryActionsTable } from './components/RecentRecoveryActionsTable';
 import { RecoveryPlanModal } from './components/RecoveryPlanModal';
 import { DemoStoreView } from './components/DemoStoreView';
+import { IncidentsView } from './components/IncidentsView';
+import { RecoveryEngineView } from './components/RecoveryEngineView';
+import { DependencyGraphView } from './components/DependencyGraphView';
+import { AuditLogView } from './components/AuditLogView';
+import { SettingsView } from './components/SettingsView';
 import { AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -116,7 +121,7 @@ export const App: React.FC = () => {
       setBackendOnline(false);
       if (!isSilent) {
         setErrorMessage(
-          `Unable to connect to RecoverOps backend (${err.message || 'Network Error'}). Make sure FastAPI server is running.`
+          `Unable to connect to RecoverOps backend (${err.message || 'Network Error'}). Make sure FastAPI server is running on port 8000.`
         );
       }
     } finally {
@@ -162,10 +167,10 @@ export const App: React.FC = () => {
           await api.startRecovery(res.incidents[0].id);
         }
       }
-      showSuccess('Recovery sequence successfully executed!');
+      showSuccess('Recovery sequence successfully executed through allowlisted adapter!');
       fetchData();
     } catch (err: any) {
-      showError(err.message || 'Failed to start recovery');
+      showError(err.message || 'Failed to start recovery sequence');
     } finally {
       setIsExecutingRecovery(false);
     }
@@ -177,6 +182,16 @@ export const App: React.FC = () => {
       setPreviewPlan(plan);
     } catch (err: any) {
       showError(err.message || `Failed to fetch recovery plan for ${service}`);
+    }
+  };
+
+  const handleSimulateOutage = async (service: string) => {
+    try {
+      await api.simulateFailure(service);
+      showSuccess(`Simulated outage injected on ${service}`);
+      fetchData();
+    } catch (err: any) {
+      showError(err.message || `Failed to simulate failure on ${service}`);
     }
   };
 
@@ -193,7 +208,7 @@ export const App: React.FC = () => {
         activeNav={activeNav}
         onSelectNav={(nav) => {
           setActiveNav(nav);
-          if (nav === 'overview') setActiveTab('dashboard');
+          setActiveTab('dashboard');
         }}
         activeIncidentsCount={activeIncidents.length}
         backendOnline={backendOnline}
@@ -215,7 +230,7 @@ export const App: React.FC = () => {
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-rose-500 hover:text-rose-800 p-1"
+              className="text-rose-500 hover:text-rose-800 p-1 cursor-pointer"
             >
               <XCircle className="w-4 h-4" />
             </button>
@@ -230,7 +245,7 @@ export const App: React.FC = () => {
             </div>
             <button
               onClick={() => setSuccessMessage(null)}
-              className="text-emerald-500 hover:text-emerald-800 p-1"
+              className="text-emerald-500 hover:text-emerald-800 p-1 cursor-pointer"
             >
               <XCircle className="w-4 h-4" />
             </button>
@@ -245,10 +260,56 @@ export const App: React.FC = () => {
                 fetchData();
                 showSuccess('Real HTTP 503 outage detected! Incident created in RecoverOps.');
               }}
-              onNavigateToDashboard={() => setActiveTab('dashboard')}
+              onNavigateToDashboard={() => {
+                setActiveTab('dashboard');
+                setActiveNav('overview');
+              }}
+              onError={showError}
+            />
+          ) : activeNav === 'incidents' ? (
+            <IncidentsView
+              incidents={incidents}
+              onRefresh={() => fetchData()}
+              onExecuteRecovery={handleStartRecovery}
+              onInspectPlan={handlePreviewPlan}
+              onError={showError}
+              isExecuting={isExecutingRecovery}
+            />
+          ) : activeNav === 'engine' ? (
+            <RecoveryEngineView
+              services={services}
+              incidents={incidents}
+              pendingApprovals={pendingApprovals}
+              selectedService={selectedService}
+              onSelectService={(s) => setSelectedService(s)}
+              onExecuteRecovery={handleStartRecovery}
+              onInspectPlan={handlePreviewPlan}
+              onRefresh={() => fetchData()}
+              onError={showError}
+              isExecuting={isExecutingRecovery}
+            />
+          ) : activeNav === 'graph' ? (
+            <DependencyGraphView
+              dependencies={dependencies}
+              services={services}
+              selectedService={selectedService}
+              onSelectService={(s) => setSelectedService(s)}
+              onInspectPlan={handlePreviewPlan}
+              onSimulateFailure={handleSimulateOutage}
+            />
+          ) : activeNav === 'audit' ? (
+            <AuditLogView
+              auditEvents={auditEvents}
+              onRefresh={() => fetchData()}
+            />
+          ) : activeNav === 'settings' ? (
+            <SettingsView
+              backendOnline={backendOnline}
+              onRefresh={() => fetchData()}
               onError={showError}
             />
           ) : (
+            /* Default: Overview View */
             <>
               {/* Top Row: 5 Stat Overview Cards */}
               <OverviewCards
@@ -259,7 +320,7 @@ export const App: React.FC = () => {
 
               {/* Main Operations Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                {/* Left Column (~60% width on large screens) */}
+                {/* Left Column (~58% width on large screens) */}
                 <div className="lg:col-span-7 space-y-5">
                   <DependencyGraph
                     dependencies={dependencies}
@@ -283,7 +344,7 @@ export const App: React.FC = () => {
                   />
                 </div>
 
-                {/* Right Column (~40% width on large screens) */}
+                {/* Right Column (~42% width on large screens) */}
                 <div className="lg:col-span-5 space-y-5">
                   <CurrentIncidentCard
                     incident={currentIncident}
