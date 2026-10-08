@@ -36,7 +36,7 @@ class TestLiveDemoStore:
         r_prods = client.get("/demo/products")
         assert r_prods.status_code == 200
         assert r_prods.json()["status"] == "ok"
-        assert len(r_prods.json()["products"]) == 4
+        assert len(r_prods.json()["products"]) == 8
 
     def test_demo_store_genuine_http_503_on_chaos_fail(self):
         """Injecting chaos causes real HTTP 503 on both health and products endpoints."""
@@ -105,7 +105,7 @@ class TestLiveDemoStore:
 
         r_prods = client.get("/demo/products")
         assert r_prods.status_code == 200
-        assert len(r_prods.json()["products"]) == 4
+        assert len(r_prods.json()["products"]) == 8
 
     def test_allowlisted_recovery_fails_if_live_verification_fails(self):
         """If live verification returns 503 after recovery action, recovery terminates as failed."""

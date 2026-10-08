@@ -114,10 +114,16 @@ export interface DemoProduct {
   id: string;
   name: string;
   price: number;
+  original_price?: number;
+  discount_percent?: number;
   category: string;
   in_stock: boolean;
   stock_count: number;
   description: string;
+  image?: string;
+  rating?: number;
+  sizes?: string[];
+  colors?: string[];
 }
 
 export interface DemoHealthResponse {

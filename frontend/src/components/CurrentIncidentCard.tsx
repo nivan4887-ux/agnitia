@@ -198,3 +198,4 @@ export const CurrentIncidentCard: React.FC<CurrentIncidentCardProps> = ({
     </div>
   );
 };
+

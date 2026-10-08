@@ -119,3 +119,4 @@ export const RecentRecoveryActionsTable: React.FC<RecentRecoveryActionsTableProp
     </div>
   );
 };
+
