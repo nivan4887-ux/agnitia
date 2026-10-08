@@ -39,6 +39,31 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simulateService, setSimulateService] = useState<string>('backend_api');
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const handleApprove = async (approvalId: string) => {
+    setApprovingId(approvalId);
+    try {
+      await api.approveAction(approvalId, 'Approved via Incidents View');
+      onRefresh();
+    } catch (err: any) {
+      onError(err.message || 'Approval failed');
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const handleReject = async (approvalId: string) => {
+    setApprovingId(approvalId);
+    try {
+      await api.rejectAction(approvalId, 'Rejected via Incidents View');
+      onRefresh();
+    } catch (err: any) {
+      onError(err.message || 'Rejection failed');
+    } finally {
+      setApprovingId(null);
+    }
+  };
 
   const filteredIncidents = incidents.filter((inc) => {
     const matchesFilter =
@@ -335,7 +360,29 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
                       Inspect Playbook
                     </button>
 
-                    {canRecover && (
+                    {incident.status === 'awaiting_approval' && incident.pending_approval_id ? (
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          onClick={() => handleReject(incident.pending_approval_id!)}
+                          disabled={approvingId === incident.pending_approval_id}
+                          className="px-3 py-1.5 bg-white hover:bg-stone-50 border border-[#E7E2D9] text-stone-700 text-xs font-semibold rounded-lg shadow-2xs transition cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => handleApprove(incident.pending_approval_id!)}
+                          disabled={approvingId === incident.pending_approval_id}
+                          className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#D95A1E] hover:bg-[#B84511] text-white text-xs font-semibold rounded-lg shadow-sm transition disabled:opacity-50 cursor-pointer"
+                        >
+                          {approvingId === incident.pending_approval_id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          )}
+                          <span>Approve Action</span>
+                        </button>
+                      </div>
+                    ) : canRecover ? (
                       <button
                         onClick={() => onExecuteRecovery(incident.id)}
                         disabled={isExecuting}
@@ -348,7 +395,7 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
                         )}
                         <span>Execute Recovery</span>
                       </button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
