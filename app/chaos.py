@@ -11,6 +11,12 @@ from __future__ import annotations
 import threading
 from typing import Any
 
+# --- BRIDGE Automated Connection Drain & Lock Reclamation ---
+_pool_drain_lock = threading.Lock()
+_active_connection_leases: int = 0
+_auto_recovery_enabled: bool = True
+# -------------------------------------------------------------
+
 _chaos_lock = threading.RLock()
 
 CHAOS_SCENARIOS: dict[str, dict[str, Any]] = {

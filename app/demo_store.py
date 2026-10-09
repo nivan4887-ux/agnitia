@@ -22,6 +22,13 @@ router = APIRouter(prefix="/demo", tags=["Demo Mini-Store"])
 
 _lock = threading.RLock()
 
+# --- BRIDGE DB Connection Pool & Circuit Breaker Policy ---
+DB_POOL_MAX_ACTIVE: int = 50
+DB_POOL_ACQUIRE_TIMEOUT_SEC: float = 10.0
+DB_POOL_DRAIN_ON_ERROR: bool = True
+DB_CIRCUIT_BREAKER_RETRIES: int = 3
+# ------------------------------------------------------------
+
 # Subsystem health states
 _demo_state: dict[str, Any] = {
     "is_healthy": True,

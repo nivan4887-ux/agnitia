@@ -27,7 +27,9 @@ import { DependencyGraphView } from './components/DependencyGraphView';
 import { AuditLogView } from './components/AuditLogView';
 import { CodeReviewView } from './components/CodeReviewView';
 import { CodeChangeReviewModal } from './components/CodeChangeReviewModal';
-import { AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
+import { SOSTriggerModal } from './components/SOSTriggerModal';
+import { EmergencyAlarmBanner } from './components/EmergencyAlarmBanner';
+import { AlertTriangle, XCircle, CheckCircle2, AlertOctagon } from 'lucide-react';
 
 export const App: React.FC = () => {
   // Navigation State
@@ -57,6 +59,7 @@ export const App: React.FC = () => {
   const [previewPlan, setPreviewPlan] = useState<RecoveryPlanResponse | null>(null);
   const [reviewChangeSet, setReviewChangeSet] = useState<ChangeSet | null>(null);
   const [isExecutingRecovery, setIsExecutingRecovery] = useState<boolean>(false);
+  const [isSosModalOpen, setIsSosModalOpen] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
 
@@ -220,10 +223,22 @@ export const App: React.FC = () => {
         onRefresh={() => fetchData()}
         activeTab={activeTab}
         onSelectTab={setActiveTab}
+        onOpenSOS={() => setIsSosModalOpen(true)}
       />
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Real-Time Emergency Alarm Siren Banner */}
+        <EmergencyAlarmBanner
+          activeIncidents={activeIncidents}
+          onViewIncident={(inc) => {
+            setActiveTab('dashboard');
+            setActiveNav('engine');
+            setSelectedService(inc.failed_service);
+            handlePreviewPlan(inc.failed_service);
+          }}
+        />
+
         {/* Alerts Banner Container */}
         {errorMessage && (
           <div className="mb-5 bg-rose-50 border border-rose-300 rounded-xl p-3.5 flex items-center justify-between shadow-xs animate-in fade-in">
@@ -419,6 +434,42 @@ export const App: React.FC = () => {
           setIsExecutingRecovery(false);
         }}
       />
+
+      {/* Emergency SOS Trigger Modal (Mobile-first responsive drawer/modal) */}
+      <SOSTriggerModal
+        isOpen={isSosModalOpen}
+        onClose={() => setIsSosModalOpen(false)}
+        availableServices={
+          dependencies.nodes.length > 0
+            ? dependencies.nodes
+            : [
+                'backend_api',
+                'database',
+                'order_service',
+                'payment_service',
+                'website',
+              ]
+        }
+        initialService={selectedService || 'backend_api'}
+        onIncidentCreated={(newIncident) => {
+          fetchData();
+          showSuccess(
+            `P1 Emergency SOS incident '${newIncident.id}' successfully registered for service '${newIncident.failed_service}'.`
+          );
+        }}
+      />
+
+      {/* Mobile Floating Action Button for Instant SOS Access */}
+      <div className="lg:hidden fixed bottom-5 right-5 z-40">
+        <button
+          onClick={() => setIsSosModalOpen(true)}
+          className="flex items-center space-x-2 px-4 py-3 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white rounded-full shadow-2xl border-2 border-white/30 transition-all font-black text-xs uppercase tracking-wider cursor-pointer"
+          aria-label="Emergency SOS Outage Trigger"
+        >
+          <AlertOctagon className="w-4 h-4 animate-pulse text-white" />
+          <span>SOS ALERT</span>
+        </button>
+      </div>
     </div>
   );
 };

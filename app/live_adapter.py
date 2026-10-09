@@ -100,23 +100,35 @@ def run_live_health_probe(auto_create_incident: bool = True) -> dict[str, Any]:
     created_incident: dict[str, Any] | None = None
 
     if not is_healthy and auto_create_incident:
-        with state.state_lock:
-            # Check if backend_api is not already marked failed
-            if state.service_states.get("backend_api") != "failed":
-                created_incident = state.fail_service("backend_api")
-                # Enrich incident audit with actual HTTP diagnostics
-                state.record_audit_event(
-                    incident_id=created_incident["id"],
-                    event_type="live_http_probe_failure",
-                    service="backend_api",
-                    details={
-                        "health_probe": health_result,
-                        "products_probe": products_result,
-                        "observed_http_status": health_result["status_code"],
-                        "error_code": health_result.get("error_code"),
-                        "error_message": health_result.get("error"),
-                    },
-                )
+        from app import sos
+        sos_res = sos.dispatch_sos_incident(
+            service="backend_api",
+            reason=f"Live HTTP probe failure: {health_result.get('error') or 'Service unhealthy'}",
+            reporter="live_http_probe",
+            failure_type="live_http_probe_failure",
+            metadata={
+                "health_probe": health_result,
+                "products_probe": products_result,
+                "observed_http_status": health_result["status_code"],
+                "error_code": health_result.get("error_code"),
+                "error_message": health_result.get("error"),
+            },
+            auto_trigger_recovery=False,
+        )
+        created_incident = sos_res.get("incident")
+        if created_incident:
+            state.record_audit_event(
+                incident_id=created_incident["id"],
+                event_type="live_http_probe_failure",
+                service="backend_api",
+                details={
+                    "health_probe": health_result,
+                    "products_probe": products_result,
+                    "observed_http_status": health_result["status_code"],
+                    "error_code": health_result.get("error_code"),
+                    "error_message": health_result.get("error"),
+                },
+            )
 
     return {
         "is_healthy": is_healthy,

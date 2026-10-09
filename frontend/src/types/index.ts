@@ -310,4 +310,22 @@ export interface ChangeSet {
   } | null;
 }
 
+export interface SOSRequest {
+  service: string;
+  reason?: string;
+  reporter?: string;
+  idempotency_key?: string;
+}
+
+export interface SOSResponse {
+  status: string;
+  incident_id: string;
+  current_status: IncidentStatus;
+  incident: Incident;
+  service: string;
+  message: string;
+  audit_event_id?: string;
+  duplicate?: boolean;
+}
+
 

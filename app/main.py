@@ -4,14 +4,24 @@ BRIDGE – Backend Recovery & Intelligent Dependency Governance Engine – FastA
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 import json
 from typing import Any, Optional
 
+import os
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app import code_changes, demo_store, engine, graph, live_adapter, risk_gate, state, supervisor
+from app import build_monitor, code_changes, db, demo_store, engine, graph, live_adapter, notifications, risk_gate, sos, state, supervisor
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Safe MongoDB startup restoration
+    state.restore_state_from_db()
+    yield
+
 
 app = FastAPI(
     title="BRIDGE",
@@ -22,6 +32,7 @@ app = FastAPI(
         "verifies service health, and maintains an auditable record of recovery operations."
     ),
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -74,6 +85,13 @@ class FileReviewRequest(BaseModel):
     decision: str  # "accepted" | "rejected" | "pending"
 
 
+class SOSIncidentRequest(BaseModel):
+    service: str = "backend_api"
+    reason: Optional[str] = "Manual operator emergency SOS trigger"
+    reporter: Optional[str] = "operator"
+    idempotency_key: Optional[str] = None
+
+
 # ---------------------------------------------------------------------------
 # Existing Milestone 1 Routes (Preserved)
 # ---------------------------------------------------------------------------
@@ -86,7 +104,14 @@ def health():
         "service": "BRIDGE",
         "tagline": "Detect. Recover. Verify.",
         "full_form": "Backend Recovery & Intelligent Dependency Governance Engine",
+        "database": "connected" if db.is_connected() else "in_memory_fallback",
     }
+
+
+@app.get("/db/status")
+def db_status():
+    """Return MongoDB persistence layer status."""
+    return db.ping()
 
 
 @app.get("/services")
@@ -112,8 +137,97 @@ def simulate_failure(service_name: str):
             status_code=404,
             detail=f"Unknown service: '{service_name}'",
         )
-    incident = state.fail_service(service_name)
-    return {"incident": incident}
+    sos_res = sos.dispatch_sos_incident(
+        service=service_name,
+        reason=f"Manual failure simulation injected on '{service_name}'",
+        reporter="manual_simulation",
+        failure_type="simulated_failure",
+    )
+    return {"incident": sos_res.get("incident")}
+
+
+@app.post("/incidents/sos")
+@app.post("/sos")
+def trigger_sos_incident(payload: Optional[SOSIncidentRequest] = None):
+    """Trigger an emergency Priority-1 SOS incident for a service through the unified pipeline.
+
+    Validates target service, ensures idempotent execution against rapid repeated clicks,
+    deduplicates against active failures, persists to MongoDB, dispatches Telegram mobile
+    alerts, and honors approval gates.
+    """
+    data = payload or SOSIncidentRequest()
+    service = (data.service or "").strip()
+
+    if not service:
+        raise HTTPException(
+            status_code=400,
+            detail="Target service name is required for SOS alert.",
+        )
+
+    if service not in dep_graph.nodes:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown service '{service}'. Valid services: {list(dep_graph.nodes)}",
+        )
+
+    reason = (data.reason or "Manual operator emergency SOS trigger").strip()
+    reporter = (data.reporter or "operator").strip()
+    idempotency_key = (data.idempotency_key or "").strip()
+
+    result = sos.dispatch_sos_incident(
+        service=service,
+        reason=reason,
+        reporter=reporter,
+        failure_type="manual_sos",
+        idempotency_key=idempotency_key or None,
+        auto_trigger_recovery=False,
+    )
+
+    return result
+
+
+@app.post("/monitors/frontend-build/check")
+def check_frontend_build_endpoint(auto_trigger: bool = Query(True)):
+    """Run external frontend build/TypeScript verification and trigger SOS on failure."""
+    return build_monitor.check_frontend_build(auto_trigger_sos=auto_trigger)
+
+
+@app.get("/monitors/frontend-build/status")
+def get_frontend_build_status():
+    """Return health and status of the frontend build environment."""
+    return {
+        "frontend_dir": build_monitor.FRONTEND_DIR,
+        "exists": os.path.isdir(build_monitor.FRONTEND_DIR),
+    }
+
+
+@app.get("/notifications/status")
+def get_notification_status():
+    """Return mobile phone notification gateway configuration status."""
+    return notifications.get_notification_config()
+
+
+@app.post("/notifications/test")
+def test_notification():
+    """Trigger a test emergency SOS alert to the configured phone destination."""
+    return notifications.notify_sos_destination(
+        incident_id="INC-ALARM-TEST",
+        service="backend_api",
+        reason="Manual Verification: BRIDGE Real-Time Mobile Alarm Test",
+        current_status="open",
+        affected_services=["backend_api", "order_service", "website"],
+        failure_type="manual_alarm_test",
+    )
+
+
+@app.post("/notifications/call-test")
+def test_voice_call_notification():
+    """Trigger a test emergency automated voice call via Twilio."""
+    return notifications.notify_twilio_voice_call(
+        incident_id="INC-CALL-TEST",
+        service="backend_api",
+        reason="Manual Verification: BRIDGE Voice Siren Test",
+    )
 
 
 @app.get("/incidents")

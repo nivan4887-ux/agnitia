@@ -419,31 +419,31 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
       )}
 
       {/* 1. Promotional Announcement Strip */}
-      <div className="bg-[#1C130D] text-stone-300 text-[11px] font-medium py-2 px-4 border-b border-[#2C1E16]">
+      <div className="bg-[#140E0A] text-stone-400 text-[11px] font-medium py-2 px-4 sm:px-6 lg:px-8 border-b border-[#2C1E16]">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center space-x-2 overflow-x-auto whitespace-nowrap">
-            <span className="px-1.5 py-0.2 rounded bg-[#D95A1E] text-white font-bold text-[9px]">
+          <div className="flex items-center space-x-2.5 overflow-x-auto whitespace-nowrap text-stone-300">
+            <span className="px-2 py-0.5 rounded bg-[#D95A1E] text-white font-black text-[9px] tracking-wider uppercase">
               FESTIVE '26
             </span>
             <span>Use code <strong className="text-white">FESTIVE20</strong> for 20% Off Entire Atelier</span>
-            <span className="text-stone-500">•</span>
-            <span className="hidden sm:inline">Complimentary Express Shipping above ₹1,999</span>
+            <span className="text-stone-600">•</span>
+            <span className="hidden sm:inline text-stone-400">Complimentary Express Shipping above ₹1,999</span>
           </div>
 
           <div className="flex items-center space-x-3 shrink-0">
             <button
               onClick={() => setShowChaosPanel(!showChaosPanel)}
-              className="text-[#D95A1E] hover:text-white font-semibold flex items-center space-x-1 transition cursor-pointer"
+              className="text-[#D95A1E] hover:text-white font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer"
             >
-              <Flame className="w-3.5 h-3.5" />
-              <span>{showChaosPanel ? 'Hide Chaos Control' : 'Chaos Simulator'}</span>
+              <Flame className="w-3.5 h-3.5 text-[#D95A1E]" />
+              <span>{showChaosPanel ? 'Hide Chaos Bar' : 'Show Chaos Bar'}</span>
             </button>
             {onNavigateToDashboard && (
               <button
                 onClick={onNavigateToDashboard}
-                className="text-stone-400 hover:text-white transition flex items-center space-x-1 cursor-pointer"
+                className="text-stone-400 hover:text-white text-xs font-semibold transition flex items-center space-x-1 cursor-pointer"
               >
-                <span>SRE Plane</span>
+                <span>SRE Console</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
             )}
@@ -451,21 +451,22 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Interactive Chaos Scenario & Operator Control Center */}
+      {/* 2. Sleek SRE Chaos Engineering & Observability Toolbar */}
       {showChaosPanel && (
-        <div className="bg-white border-b border-[#EBE5DB] shadow-xs px-4 sm:px-6 lg:px-8 py-3.5">
+        <div className="bg-[#1C130D] text-stone-200 border-b border-[#2C1E16] px-4 sm:px-6 lg:px-8 py-3.5 shadow-md">
           <div className="max-w-7xl mx-auto space-y-3">
+            {/* Top Row: Engine Title & Live Telemetry Pills */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center space-x-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#D95A1E] text-white flex items-center justify-center shadow-xs shrink-0">
-                  <Flame className="w-4 h-4" />
+                <div className="w-7 h-7 rounded-lg bg-[#D95A1E] text-white flex items-center justify-center shadow-xs shrink-0">
+                  <Flame className="w-3.5 h-3.5" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-stone-900 tracking-tight flex items-center space-x-1.5">
-                    <span>Multi-Scenario Chaos Engine & Fault Injection</span>
+                  <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center space-x-1.5 font-mono">
+                    <span>SRE Chaos Engine & Live Probing Sandbox</span>
                   </h3>
-                  <p className="text-[11px] text-stone-500">
-                    Select distinct outage scenarios to test deterministic incident recovery.
+                  <p className="text-[11px] text-stone-400 hidden sm:block">
+                    Inject deterministic faults to test automatic SOS triggers, notifications, and AI recovery.
                   </p>
                 </div>
               </div>
@@ -473,65 +474,66 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
               {/* Status Badges */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span
-                  className={`px-2.5 py-1 rounded-lg border text-xs font-semibold flex items-center space-x-1.5 ${
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-bold flex items-center space-x-1.5 ${
                     health?.status === 'healthy'
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      : 'bg-rose-50 text-rose-800 border-rose-200 animate-pulse'
+                      ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
+                      : 'bg-rose-950/80 text-rose-300 border-rose-800 animate-pulse'
                   }`}
                 >
                   <span
                     className={`w-2 h-2 rounded-full ${
-                      health?.status === 'healthy' ? 'bg-emerald-600' : 'bg-rose-600'
+                      health?.status === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400'
                     }`}
                   />
                   <span>Catalog: {health?.status === 'healthy' ? '200 OK' : health?.error_code || '503 DOWN'}</span>
                 </span>
 
                 {activeScenario && (
-                  <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold font-mono">
+                  <span className="px-2.5 py-1 rounded-lg bg-amber-950/80 text-amber-300 border border-amber-800 text-xs font-bold font-mono">
                     Active: [{activeScenario.scenario_letter}] {activeScenario.target_service}
                   </span>
                 )}
 
                 {chaosStatus && (
-                  <div className="hidden xl:flex items-center space-x-2 bg-stone-100 px-3 py-1 rounded-lg border border-stone-200 text-[11px] font-medium text-stone-600">
+                  <div className="hidden lg:flex items-center space-x-2 bg-[#2A1D15] px-2.5 py-1 rounded-lg border border-stone-800 text-[11px] font-medium text-stone-300">
                     <span className="text-stone-400 font-semibold mr-0.5">Subsystems:</span>
                     <span className="flex items-center space-x-1">
-                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.products_catalog === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                      <span className="text-stone-700">Catalog</span>
+                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.products_catalog === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                      <span>Catalog</span>
                     </span>
-                    <span className="text-stone-300">•</span>
+                    <span className="text-stone-600">•</span>
                     <span className="flex items-center space-x-1">
-                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.inventory === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                      <span className="text-stone-700">Inventory</span>
+                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.inventory === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                      <span>Inventory</span>
                     </span>
-                    <span className="text-stone-300">•</span>
+                    <span className="text-stone-600">•</span>
                     <span className="flex items-center space-x-1">
-                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.checkout === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                      <span className="text-stone-700">Checkout</span>
+                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.checkout === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                      <span>Checkout</span>
                     </span>
-                    <span className="text-stone-300">•</span>
+                    <span className="text-stone-600">•</span>
                     <span className="flex items-center space-x-1">
-                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.payment === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                      <span className="text-stone-700">Payment</span>
+                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.payment === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                      <span>Payment</span>
                     </span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Scenario Selector & Action Buttons */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center bg-stone-50/80 p-3.5 rounded-2xl border border-[#E7E2D9]">
-              <div className="lg:col-span-6 space-y-1">
-                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider">
-                  Choose Chaos Outage Scenario:
-                </label>
-                <div className="relative">
+            {/* Bottom Row: Controls with Perfect Horizontal Alignment */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-[#261A13] p-2.5 rounded-xl border border-stone-800">
+              {/* Left: Dropdown + Probe Result Tag */}
+              <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider whitespace-nowrap shrink-0">
+                  Scenario:
+                </span>
+                <div className="relative flex-1 max-w-xl">
                   <select
                     value={selectedScenarioId}
                     onChange={(e) => setSelectedScenarioId(e.target.value)}
                     disabled={isInjecting || isResetting}
-                    className="w-full bg-white border border-[#DCD5C9] rounded-xl pl-3 pr-8 py-2 text-xs font-semibold text-stone-800 shadow-xs focus:outline-none focus:ring-1 focus:ring-[#D95A1E] transition cursor-pointer"
+                    className="w-full bg-[#1C130D] border border-stone-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow-xs focus:outline-none focus:ring-1 focus:ring-[#D95A1E] focus:border-[#D95A1E] transition cursor-pointer"
                   >
                     {scenarios.map((sc) => (
                       <option key={sc.id} value={sc.id}>
@@ -540,18 +542,27 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
                     ))}
                   </select>
                 </div>
+
                 {lastProbe && (
-                  <p className="text-[10px] font-mono text-stone-500">
-                    Last Probe Result: <span className={lastProbe.is_healthy ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>{lastProbe.is_healthy ? '200 OK (All Healthy)' : `${lastProbe.health_probe.status_code} OUTAGE DETECTED`}</span>
-                  </p>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-mono font-bold shrink-0 border ${
+                      lastProbe.is_healthy
+                        ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                        : 'bg-rose-950 text-rose-300 border-rose-800'
+                    }`}
+                  >
+                    Probe: {lastProbe.is_healthy ? '200 OK' : `${lastProbe.health_probe.status_code} OUTAGE`}
+                  </span>
                 )}
               </div>
 
-              <div className="lg:col-span-6 flex flex-wrap items-center justify-end gap-2 pt-1 lg:pt-0">
+              {/* Right: Action Buttons Group with Unified Heights */}
+              <div className="flex items-center space-x-2 shrink-0 self-end lg:self-center">
                 <button
                   onClick={() => handleInjectScenario()}
                   disabled={isInjecting}
-                  className="px-3.5 py-2 bg-[#D95A1E] hover:bg-[#C2410C] text-white text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1.5 transition disabled:opacity-50 cursor-pointer"
+                  className="h-8 px-3.5 bg-[#D95A1E] hover:bg-[#C2410C] text-white text-xs font-bold rounded-lg shadow-xs flex items-center space-x-1.5 transition disabled:opacity-50 cursor-pointer active:scale-95"
+                  title="Inject simulated outage on target microservice"
                 >
                   {isInjecting ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -564,32 +575,34 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
                 <button
                   onClick={handleManualProbe}
                   disabled={isProbing}
-                  className="px-3.5 py-2 bg-white hover:bg-stone-50 border border-[#DCD5C9] text-stone-800 text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1.5 transition cursor-pointer"
+                  className="h-8 px-3.5 bg-[#1C130D] hover:bg-stone-800 border border-stone-700 text-stone-200 text-xs font-bold rounded-lg shadow-xs flex items-center space-x-1.5 transition cursor-pointer active:scale-95"
+                  title="Execute real HTTP verification probe"
                 >
-                  <Activity className={`w-3.5 h-3.5 text-stone-600 ${isProbing ? 'animate-spin text-[#D95A1E]' : ''}`} />
+                  <Activity className={`w-3.5 h-3.5 text-stone-400 ${isProbing ? 'animate-spin text-[#D95A1E]' : ''}`} />
                   <span>Run Probe</span>
                 </button>
 
                 <button
                   onClick={handleAutoRecover}
                   disabled={isRecovering}
-                  className="px-3.5 py-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1.5 transition cursor-pointer"
+                  className="h-8 px-3.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center space-x-1.5 transition cursor-pointer active:scale-95"
+                  title="Trigger automated recovery orchestrator"
                 >
                   {isRecovering ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
                     <ShieldCheck className="w-3.5 h-3.5" />
                   )}
-                  <span>Execute Recovery</span>
+                  <span>Recover</span>
                 </button>
 
                 <button
                   onClick={handleResetChaos}
                   disabled={isResetting}
-                  className="p-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl transition cursor-pointer"
-                  title="Reset demo baseline"
+                  className="h-8 w-8 flex items-center justify-center bg-[#1C130D] hover:bg-stone-800 border border-stone-700 text-stone-300 rounded-lg transition cursor-pointer"
+                  title="Reset demo baseline to healthy state"
                 >
-                  <RotateCcw className={`w-4 h-4 ${isResetting ? 'animate-spin' : ''}`} />
+                  <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
                 </button>
               </div>
             </div>

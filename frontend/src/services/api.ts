@@ -17,10 +17,31 @@ import type {
   RecoveryJobResponse,
   RecoveryStatusResponse,
   ServiceHealth,
+  SOSRequest,
+  SOSResponse,
 } from '../types';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const getApiBaseUrl = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      return `http://${host}:8000`;
+    }
+  }
+  return envUrl || 'http://localhost:8000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// --- BRIDGE Database & Catalog API Resilient Retry Interceptor ---
+export const DB_RECOVERY_RETRY_POLICY = {
+  maxRetries: 3,
+  baseBackoffMs: 250,
+  retryableStatusCodes: [502, 503, 504],
+  circuitBreakerThreshold: 5,
+};
+// ------------------------------------------------------------------
 
 class ApiError extends Error {
   status: number;
@@ -382,6 +403,14 @@ export const api = {
   ): Promise<{ status: string; changeset: ChangeSet; validation_results: any }> => {
     return fetchJson(`${API_BASE_URL}/code-changes/${encodeURIComponent(changesetId)}/apply`, {
       method: 'POST',
+    });
+  },
+
+  // Emergency SOS Incident Trigger API
+  triggerSOS: async (payload: SOSRequest): Promise<SOSResponse> => {
+    return fetchJson(`${API_BASE_URL}/incidents/sos`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
   },
 };

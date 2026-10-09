@@ -60,6 +60,9 @@ def _finalize_incident(
             },
         )
 
+    state.save_incident(incident)
+    state.save_service_states(state.service_states)
+
 
 def execute_recovery(
     incident: dict[str, Any],
@@ -225,6 +228,7 @@ def execute_recovery(
                                 "description": playbook.get("description"),
                             },
                         )
+                        state.save_incident(incident)
                         return incident
 
                 # Mark service state as recovering & transition to EXECUTING
@@ -239,6 +243,8 @@ def execute_recovery(
                         action=playbook.get("action"),
                         log_message=f"[EXECUTING] Executing recovery action '{playbook.get('action')}' on '{service}' (Step {step_idx + 1}/{len(incident['recovery_order'])})...",
                     )
+                state.save_incident(incident)
+                state.save_service_states(state.service_states)
 
             # 3. Playbook Action Execution
             try:
@@ -372,6 +378,8 @@ def execute_recovery(
                         log_message=f"Health verification passed for '{service}': {health_result.get('message')}",
                     )
                 incident["current_step_index"] += 1
+                state.save_incident(incident)
+                state.save_service_states(state.service_states)
 
         with state.state_lock:
             if job_id:
@@ -505,6 +513,8 @@ def process_approval(
                 "reason": reason,
             },
         )
+        state.save_approval(approval)
+        state.save_incident(incident)
 
         job_id = incident.get("active_job_id")
 

@@ -8,7 +8,6 @@ import {
   RefreshCw,
   LayoutGrid,
   Store,
-  Clock,
   FileCode,
 } from 'lucide-react';
 
@@ -22,6 +21,7 @@ interface HeaderProps {
   onRefresh: () => void;
   activeTab: 'dashboard' | 'demo_store';
   onSelectTab: (tab: 'dashboard' | 'demo_store') => void;
+  onOpenSOS?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,23 +30,12 @@ export const Header: React.FC<HeaderProps> = ({
   activeIncidentsCount,
   backendOnline,
   isPolling,
-  lastUpdated,
+  lastUpdated: _lastUpdated,
   onRefresh,
   activeTab,
   onSelectTab,
+  onOpenSOS,
 }) => {
-  const formattedDate = lastUpdated
-    ? lastUpdated.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }) +
-      ' ' +
-      lastUpdated.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : 'May 16, 2025 01:31 PM';
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Home },
@@ -126,33 +115,43 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right: Mode Switchers & Telemetry */}
-          <div className="flex items-center space-x-3 sm:space-x-4 shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            {/* Emergency SOS Trigger Button */}
+            {onOpenSOS && (
+              <button
+                onClick={onOpenSOS}
+                title="Trigger Emergency Priority-1 SOS Incident"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider shadow-sm transition border border-rose-500/50 cursor-pointer active:scale-95 shrink-0"
+              >
+                <AlertOctagon className="w-3.5 h-3.5 text-white animate-pulse" />
+                <span>SOS Alert</span>
+              </button>
+            )}
+
             {/* Mode Switcher Pill Group */}
             <div className="bg-[#2A1D15] p-1 rounded-xl border border-stone-800 flex items-center space-x-1">
               <button
                 onClick={() => onSelectTab('dashboard')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer ${
                   activeTab === 'dashboard'
                     ? 'bg-[#D95A1E] text-white shadow-sm'
                     : 'text-stone-300 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">SRE Control Plane</span>
-                <span className="sm:hidden">SRE</span>
+                <span>SRE Console</span>
               </button>
 
               <button
                 onClick={() => onSelectTab('demo_store')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition ${
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer ${
                   activeTab === 'demo_store'
                     ? 'bg-[#D95A1E] text-white shadow-sm'
                     : 'text-stone-300 hover:text-white hover:bg-white/5'
                 }`}
               >
                 <Store className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Live Mini-Store Demo</span>
-                <span className="sm:hidden">Demo</span>
+                <span>Live Store</span>
               </button>
             </div>
 
@@ -160,30 +159,27 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="hidden sm:block h-5 w-px bg-stone-700/60" />
 
             {/* Live System Status Indicators */}
-            <div className="flex items-center space-x-3 text-xs font-medium text-stone-300">
+            <div className="flex items-center space-x-2 text-xs font-medium text-stone-300">
               {/* API Connected Status */}
-              <div className="flex items-center space-x-1.5 bg-[#2A1D15] px-2.5 py-1.5 rounded-lg border border-stone-800">
+              <div
+                className="flex items-center space-x-1.5 bg-[#2A1D15] px-2.5 py-1.5 rounded-lg border border-stone-800"
+                title={backendOnline ? 'API Connected to backend' : 'Backend offline'}
+              >
                 <span
                   className={`w-2 h-2 rounded-full ${
                     backendOnline ? 'bg-[#4CAF50] animate-pulse' : 'bg-[#D32F2F]'
                   }`}
                 />
-                <span className="font-semibold text-stone-200 hidden md:inline">
-                  {backendOnline ? 'API Connected' : 'API Disconnected'}
+                <span className="font-semibold text-stone-200 hidden sm:inline">
+                  {backendOnline ? 'Online' : 'Offline'}
                 </span>
-              </div>
-
-              {/* Date Time */}
-              <div className="hidden xl:flex items-center space-x-1.5 text-stone-400">
-                <Clock className="w-3.5 h-3.5 text-stone-500" />
-                <span className="font-mono text-[11px]">{formattedDate}</span>
               </div>
 
               {/* Refresh button */}
               <button
                 onClick={onRefresh}
                 title="Refresh telemetry"
-                className="p-1.5 rounded-lg bg-[#2A1D15] hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 transition"
+                className="p-1.5 rounded-lg bg-[#2A1D15] hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 transition cursor-pointer"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin text-[#D95A1E]' : ''}`}
@@ -195,6 +191,15 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Mobile / Tablet Nav Row (Visible when screen is smaller than lg) */}
         <div className="lg:hidden flex items-center space-x-1 overflow-x-auto py-2 border-t border-stone-800/80 scrollbar-none">
+          {onOpenSOS && (
+            <button
+              onClick={onOpenSOS}
+              className="flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-rose-600 text-white shrink-0 active:scale-95 transition"
+            >
+              <AlertOctagon className="w-3 h-3 text-white animate-pulse" />
+              <span>SOS</span>
+            </button>
+          )}
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeNav === item.id && activeTab === 'dashboard';
