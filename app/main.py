@@ -192,13 +192,39 @@ def check_frontend_build_endpoint(auto_trigger: bool = Query(True)):
     return build_monitor.check_frontend_build(auto_trigger_sos=auto_trigger)
 
 
+@app.post("/monitors/frontend-build/simulate-lifecycle")
+def simulate_frontend_syntax_lifecycle_endpoint():
+    """Execute end-to-end 5-step verification lifecycle for frontend syntax error detection and recovery."""
+    return build_monitor.run_disposable_syntax_error_lifecycle()
+
+
+@app.post("/monitors/frontend-build/inject-syntax-error")
+def inject_syntax_error_endpoint():
+    """Introduce a controlled syntax error in a disposable test copy."""
+    return build_monitor.inject_controlled_syntax_error()
+
+
+@app.post("/monitors/frontend-build/restore")
+def restore_frontend_source_endpoint():
+    """Restore the source by safely removing the disposable test copy."""
+    return build_monitor.restore_disposable_source()
+
+
+@app.post("/monitors/frontend-build/resolve/{incident_id}")
+def resolve_frontend_incident_endpoint(incident_id: str):
+    """Confirm the incident and audit history reflect recovery."""
+    return build_monitor.resolve_frontend_build_incident(incident_id=incident_id)
+
+
 @app.get("/monitors/frontend-build/status")
 def get_frontend_build_status():
     """Return health and status of the frontend build environment."""
     return {
         "frontend_dir": build_monitor.FRONTEND_DIR,
         "exists": os.path.isdir(build_monitor.FRONTEND_DIR),
+        "disposable_test_file_present": os.path.isfile(build_monitor.CONTROLLED_DISPOSABLE_FILE),
     }
+
 
 
 @app.get("/notifications/status")
