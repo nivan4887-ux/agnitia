@@ -5,7 +5,6 @@ import {
   Flame,
   Network,
   ClipboardList,
-  FileCode,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -28,7 +27,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
     },
     { id: 'engine', label: 'Recovery Engine', icon: Flame },
-    { id: 'code_review', label: 'Code Review', icon: FileCode },
     { id: 'graph', label: 'Dependency Graph', icon: Network },
     { id: 'audit', label: 'Audit Log', icon: ClipboardList },
   ];

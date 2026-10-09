@@ -25,7 +25,6 @@ import { IncidentsView } from './components/IncidentsView';
 import { RecoveryEngineView } from './components/RecoveryEngineView';
 import { DependencyGraphView } from './components/DependencyGraphView';
 import { AuditLogView } from './components/AuditLogView';
-import { CodeReviewView } from './components/CodeReviewView';
 import { CodeChangeReviewModal } from './components/CodeChangeReviewModal';
 import { SOSTriggerModal } from './components/SOSTriggerModal';
 import { EmergencyAlarmBanner } from './components/EmergencyAlarmBanner';
@@ -306,12 +305,6 @@ export const App: React.FC = () => {
               onRefresh={() => fetchData()}
               onError={showError}
               isExecuting={isExecutingRecovery}
-            />
-          ) : activeNav === 'code_review' ? (
-            <CodeReviewView
-              onRefresh={() => fetchData()}
-              onError={showError}
-              onSuccess={showSuccess}
             />
           ) : activeNav === 'integrity' ? (
             <DataIntegrityView />

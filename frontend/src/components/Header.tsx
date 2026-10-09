@@ -8,7 +8,6 @@ import {
   RefreshCw,
   LayoutGrid,
   Store,
-  FileCode,
   ShieldCheck,
 } from 'lucide-react';
 
@@ -48,7 +47,6 @@ export const Header: React.FC<HeaderProps> = ({
     },
     { id: 'engine', label: 'Recovery', icon: Flame },
     { id: 'integrity', label: 'Integrity', icon: ShieldCheck },
-    { id: 'code_review', label: 'Code', icon: FileCode },
     { id: 'graph', label: 'Graph', icon: Network },
     { id: 'audit', label: 'Audit', icon: ClipboardList },
   ];
