@@ -196,8 +196,23 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
     const scId = scenarioIdToInject || selectedScenarioId;
     setIsInjecting(true);
     try {
-      const res = await api.injectChaosScenario(scId);
-      showToast(`Fault Injected: ${res.scenario.name}`);
+      if (scId.startsWith('fault_')) {
+        const faultMap: Record<string, { type: string; service: string; name: string }> = {
+          fault_api_500: { type: 'api_500_fault', service: 'backend_api', name: 'API 500 Spike' },
+          fault_gateway_timeout: { type: 'gateway_timeout', service: 'backend_api', name: '504 Gateway Timeout' },
+          fault_order_backpressure: { type: 'order_backpressure', service: 'order_service', name: 'Order Queue Backpressure' },
+          fault_payment_timeout: { type: 'payment_timeout', service: 'payment_service', name: 'Payment Settlement Timeout' },
+          fault_frontend_syntax_crash: { type: 'frontend_syntax_crash', service: 'website', name: 'Frontend Vite AST Crash' },
+          fault_database_deadlock: { type: 'database_deadlock', service: 'database', name: 'DB Pool Deadlock' },
+          fault_data_corruption: { type: 'data_corruption', service: 'database', name: 'Data Integrity Quarantine' },
+        };
+        const target = faultMap[scId] || { type: 'api_500_fault', service: 'backend_api', name: 'API Fault' };
+        await api.injectFault({ fault_type: target.type, service: target.service });
+        showToast(`💥 Injected ${target.name}! Outage broadcasted to SRE Laptop.`);
+      } else {
+        const res = await api.injectChaosScenario(scId);
+        showToast(`Fault Injected: ${res.scenario.name}`);
+      }
       // Run probe automatically to update SRE plane
       const probeRes = await api.runLiveProbe(true);
       setLastProbe(probeRes);
@@ -535,11 +550,22 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
                     disabled={isInjecting || isResetting}
                     className="w-full bg-[#1C130D] border border-stone-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow-xs focus:outline-none focus:ring-1 focus:ring-[#D95A1E] focus:border-[#D95A1E] transition cursor-pointer"
                   >
-                    {scenarios.map((sc) => (
-                      <option key={sc.id} value={sc.id}>
-                        [{sc.scenario_letter}] {sc.name}
-                      </option>
-                    ))}
+                    <optgroup label="💥 Production Outages (Triggers SRE Laptop Alerts)">
+                      <option value="fault_api_500">[P1] API 500 Fault Spike (Checkout Crash • 15s SRE fix)</option>
+                      <option value="fault_gateway_timeout">[P1] 504 Gateway SLA Timeout (18s SRE fix)</option>
+                      <option value="fault_order_backpressure">[P2] RabbitMQ Order Backpressure (20s SRE fix)</option>
+                      <option value="fault_payment_timeout">[P1] Payment Settlement Timeout (22s SRE fix)</option>
+                      <option value="fault_frontend_syntax_crash">[P2] Vite Bundler AST White-Screen (25s SRE fix)</option>
+                      <option value="fault_database_deadlock">[P1] DB Connection Deadlock (28s SRE fix)</option>
+                      <option value="fault_data_corruption">[P1] Data Integrity Quarantine (28s SRE fix)</option>
+                    </optgroup>
+                    <optgroup label="📦 Catalog Scenarios">
+                      {scenarios.map((sc) => (
+                        <option key={sc.id} value={sc.id}>
+                          [{sc.scenario_letter}] {sc.name}
+                        </option>
+                      ))}
+                    </optgroup>
                   </select>
                 </div>
 

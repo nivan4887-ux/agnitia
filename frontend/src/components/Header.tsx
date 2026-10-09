@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   Store,
   ShieldCheck,
+  ExternalLink,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -167,6 +168,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <Store className="w-3 h-3" />
                 <span>Store</span>
               </button>
+
+              <a
+                href={`http://${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}:5174`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Launch Standalone Store on Port 5174 (For Laptop 1 / Dual-Screen Demo)"
+                className="px-2 py-1 rounded-md text-[11px] font-mono text-stone-400 hover:text-orange-400 hover:bg-white/5 flex items-center space-x-1 transition"
+              >
+                <span>:5174</span>
+                <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+              </a>
             </div>
 
             {/* Vertical Divider */}

@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 5173 --host",
+    "dev:store": "vite --port 5174 --host",
+    "dev:all": "node dev-all.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
