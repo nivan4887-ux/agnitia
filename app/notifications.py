@@ -40,6 +40,7 @@ def get_notification_config() -> Dict[str, Any]:
     twilio_to = os.environ.get("TWILIO_TO_NUMBER", "").strip()
 
     enable_voice_calls = os.environ.get("ENABLE_TWILIO_CALLS", "true").strip().lower() in ("true", "1", "yes")
+    enable_call_forwarding = os.environ.get("ENABLE_CALL_FORWARDING", "true").strip().lower() in ("true", "1", "yes")
     has_twilio = bool(twilio_sid and twilio_token and twilio_from and twilio_to)
 
     return {
@@ -51,6 +52,7 @@ def get_notification_config() -> Dict[str, Any]:
         "twilio_configured": bool(enable_voice_calls and has_twilio),
         "twilio_to": twilio_to,
         "voice_calls_enabled": enable_voice_calls,
+        "call_forwarding_enabled": bool(enable_call_forwarding and twilio_to),
     }
 
 
@@ -306,6 +308,33 @@ def notify_twilio_voice_call(
             "timestamp": now_iso,
             "error": str(exc),
         }
+
+
+def generate_call_forward_twiml(
+    to_number: Optional[str] = None,
+    caller_id: Optional[str] = None,
+) -> str:
+    """Generate standard TwiML XML to forward incoming calls to the responder phone."""
+    target_to = (to_number or os.environ.get("TWILIO_TO_NUMBER", "")).strip()
+    target_from = (caller_id or os.environ.get("TWILIO_FROM_NUMBER", "")).strip()
+
+    if not target_to:
+        return (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<Response>\n'
+            '    <Say voice="alice">No destination phone number is configured for call forwarding in Agnitia Bridge.</Say>\n'
+            '</Response>'
+        )
+
+    caller_id_attr = f' callerId="{target_from}"' if target_from else ""
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Response>\n'
+        '    <Say voice="alice">Forwarding call to Agnitia emergency responder.</Say>\n'
+        f'    <Dial timeout="25"{caller_id_attr}>{target_to}</Dial>\n'
+        '</Response>'
+    )
+
 
 
 

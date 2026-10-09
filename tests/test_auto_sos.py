@@ -345,3 +345,26 @@ def test_twilio_voice_call_endpoint():
         assert resp.json()["accepted"] is True
 
 
+def test_call_forwarding_twiml_generation():
+    """generate_call_forward_twiml generates valid TwiML XML with Dial and timeout."""
+    twiml = notifications.generate_call_forward_twiml(to_number="+919876543210", caller_id="+1234567890")
+    assert "<Response>" in twiml
+    assert "<Dial" in twiml
+    assert "+919876543210" in twiml
+    assert 'callerId="+1234567890"' in twiml
+
+
+def test_twilio_call_forward_webhook_endpoint():
+    """GET and POST /twilio/voice and /notifications/voice-webhook return 200 with XML."""
+    resp_get = client.get("/twilio/voice")
+    assert resp_get.status_code == 200
+    assert "application/xml" in resp_get.headers["content-type"]
+    assert "<Response>" in resp_get.text
+
+    resp_post = client.post("/notifications/voice-webhook")
+    assert resp_post.status_code == 200
+    assert "application/xml" in resp_post.headers["content-type"]
+    assert "<Dial" in resp_post.text
+
+
+

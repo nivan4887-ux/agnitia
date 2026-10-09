@@ -9,7 +9,7 @@ import json
 from typing import Any, Optional
 
 import os
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -254,6 +254,21 @@ def test_voice_call_notification():
         service="backend_api",
         reason="Manual Verification: BRIDGE Voice Siren Test",
     )
+
+
+@app.api_route("/notifications/voice-webhook", methods=["GET", "POST"])
+@app.api_route("/twilio/voice", methods=["GET", "POST"])
+@app.api_route("/twilio/call-forward", methods=["GET", "POST"])
+def twilio_call_forward_webhook():
+    """Twilio Inbound Voice Webhook.
+    
+    When an incoming call is received on the Twilio phone number, Twilio requests
+    this webhook. Returns TwiML XML instructions to forward (<Dial>) the call
+    directly to the configured operator phone number (TWILIO_TO_NUMBER).
+    """
+    twiml_xml = notifications.generate_call_forward_twiml()
+    return Response(content=twiml_xml, media_type="application/xml")
+
 
 
 @app.get("/incidents")
