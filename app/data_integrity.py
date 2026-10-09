@@ -334,6 +334,15 @@ def recover_quarantined_record(
             },
         )
 
+        # Sync to MongoDB if connected
+        db_conn = db.get_database()
+        if db_conn is not None:
+            try:
+                db_conn["valid_orders"].replace_one({"_id": target_id}, {**record, "_id": target_id}, upsert=True)
+                db_conn["quarantined_records"].replace_one({"_id": quarantine_id}, {**entry, "_id": quarantine_id}, upsert=True)
+            except Exception as exc:
+                logger.warning("MongoDB recovery sync failed: %s", exc)
+
         return {
             "success": True,
             "message": f"Record '{quarantine_id}' safely sanitized and promoted to primary database as '{target_id}'.",
@@ -350,6 +359,14 @@ def purge_quarantined_record(quarantine_id: str) -> Dict[str, Any]:
 
         entry["status"] = "purged"
         entry["purged_at"] = _now_iso()
+
+        # Sync to MongoDB if connected
+        db_conn = db.get_database()
+        if db_conn is not None:
+            try:
+                db_conn["quarantined_records"].delete_one({"_id": quarantine_id})
+            except Exception as exc:
+                logger.warning("MongoDB purge sync failed: %s", exc)
 
         state.record_audit_event(
             incident_id=f"INC-{quarantine_id}",
