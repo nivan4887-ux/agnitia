@@ -39,7 +39,8 @@ def get_notification_config() -> Dict[str, Any]:
     twilio_from = os.environ.get("TWILIO_FROM_NUMBER", "").strip()
     twilio_to = os.environ.get("TWILIO_TO_NUMBER", "").strip()
 
-    enable_voice_calls = os.environ.get("ENABLE_TWILIO_CALLS", "false").strip().lower() in ("true", "1", "yes")
+    enable_voice_calls = os.environ.get("ENABLE_TWILIO_CALLS", "true").strip().lower() in ("true", "1", "yes")
+    has_twilio = bool(twilio_sid and twilio_token and twilio_from and twilio_to)
 
     return {
         "provider": "telegram",
@@ -47,9 +48,9 @@ def get_notification_config() -> Dict[str, Any]:
         "bot_token_present": bool(bot_token),
         "chat_id": chat_id,
         "phone_destination": phone_dest,
-        "twilio_configured": False,
-        "twilio_to": "",
-        "voice_calls_enabled": False,
+        "twilio_configured": bool(enable_voice_calls and has_twilio),
+        "twilio_to": twilio_to,
+        "voice_calls_enabled": enable_voice_calls,
     }
 
 
@@ -199,22 +200,112 @@ def notify_twilio_voice_call(
     incident_id: str,
     service: str,
     reason: str,
-    timeout_seconds: float = 6.0,
+    timeout_seconds: float = 8.0,
 ) -> Dict[str, Any]:
-    """Voice calls are permanently disabled per system policy.
+    """Initiate an automated emergency phone call via Twilio Voice API.
     
-    All SOS alerts and sirens operate strictly through the web application audio siren and Telegram push notifications.
-    Zero outbound calls are made to external telecom providers.
+    Calls the configured operator phone number and plays a spoken text-to-speech
+    voice alarm regarding the incident.
     """
+    import base64
+    import re
+    import urllib.parse
+
+    account_sid = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
+    auth_token = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
+    from_number = os.environ.get("TWILIO_FROM_NUMBER", "").strip()
+    to_number = os.environ.get("TWILIO_TO_NUMBER", "").strip()
+
     now_iso = datetime.now(timezone.utc).isoformat()
-    logger.info("Voice call execution requested but permanently disabled: incident %s", incident_id)
-    return {
-        "provider": "twilio_voice",
-        "accepted": False,
-        "status": "disabled_by_policy",
-        "destination": "disabled",
-        "timestamp": now_iso,
-        "error": "Outbound phone calls are disabled. Emergency alerts operate strictly on the website siren and Telegram.",
-    }
+
+    if not (account_sid and auth_token and from_number and to_number):
+        return {
+            "provider": "twilio_voice",
+            "accepted": False,
+            "status": "unconfigured",
+            "destination": to_number or "unspecified",
+            "timestamp": now_iso,
+            "error": "TWILIO_ACCOUNT_SID, AUTH_TOKEN, FROM_NUMBER, or TO_NUMBER not configured",
+        }
+
+    # Clean service and reason for TwiML speech
+    safe_service = re.sub(r"[^a-zA-Z0-9_\-\s]", "", service or "system")
+    safe_reason = re.sub(r"[^a-zA-Z0-9_\-\s\.\,]", "", reason or "Critical incident detected")
+    twiml_say = (
+        f"<Response>"
+        f"<Pause length='1'/>"
+        f"<Say voice='alice' loop='2'>Emergency alert from Agnitia Bridge. Critical failure detected on service {safe_service}. Reason: {safe_reason}. Please check the SRE dashboard immediately.</Say>"
+        f"</Response>"
+    )
+
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls.json"
+    auth_header = "Basic " + base64.b64encode(f"{account_sid}:{auth_token}".encode("utf-8")).decode("ascii")
+
+    form_data = urllib.parse.urlencode({
+        "To": to_number,
+        "From": from_number,
+        "Twiml": twiml_say,
+    }).encode("utf-8")
+
+    try:
+        req = urllib.request.Request(
+            url,
+            data=form_data,
+            headers={
+                "Authorization": auth_header,
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "Agnitia-Bridge-VoiceCaller/1.0",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+            status_code = resp.getcode()
+            body = json.loads(resp.read().decode("utf-8"))
+            call_sid = body.get("sid")
+            if status_code in (200, 201) and call_sid:
+                logger.info("Twilio emergency voice call queued: incident %s (sid: %s)", incident_id, call_sid)
+                return {
+                    "provider": "twilio_voice",
+                    "accepted": True,
+                    "status": "call_queued",
+                    "call_sid": call_sid,
+                    "destination": to_number,
+                    "timestamp": now_iso,
+                    "error": None,
+                }
+            else:
+                return {
+                    "provider": "twilio_voice",
+                    "accepted": False,
+                    "status": "call_rejected",
+                    "destination": to_number,
+                    "timestamp": now_iso,
+                    "error": body.get("message", "Twilio rejected call"),
+                }
+    except urllib.error.HTTPError as http_err:
+        err_body = ""
+        try:
+            err_body = http_err.read().decode("utf-8")
+        except Exception:
+            pass
+        logger.warning("Twilio HTTP error (%d): %s", http_err.code, err_body or http_err.reason)
+        return {
+            "provider": "twilio_voice",
+            "accepted": False,
+            "status": "twilio_http_error",
+            "destination": to_number,
+            "timestamp": now_iso,
+            "error": f"HTTP {http_err.code}: {err_body or http_err.reason}",
+        }
+    except Exception as exc:
+        logger.warning("Twilio voice call error: %s", exc)
+        return {
+            "provider": "twilio_voice",
+            "accepted": False,
+            "status": "network_or_timeout_error",
+            "destination": to_number,
+            "timestamp": now_iso,
+            "error": str(exc),
+        }
+
 
 

@@ -289,27 +289,59 @@ def test_automated_sos_recovery_halts_at_awaiting_approval_for_high_risk():
 
 
 # ---------------------------------------------------------------------------
-# 6. Twilio Automated Voice Call Disabled Policy Tests
+# 6. Twilio Automated Voice Call Tests
 # ---------------------------------------------------------------------------
 
-def test_twilio_voice_call_permanently_disabled():
-    """Verify outbound phone calls are completely disabled per user reach policy."""
-    res = notifications.notify_twilio_voice_call(
-        incident_id="INC-CALL-001",
-        service="database",
-        reason="Outage",
-    )
-    assert res["provider"] == "twilio_voice"
-    assert res["accepted"] is False
-    assert res["status"] == "disabled_by_policy"
-    assert "disabled" in res["error"].lower()
+def test_twilio_voice_call_unconfigured():
+    """Twilio voice call reports unconfigured without crashing when credentials are missing."""
+    with patch.dict("os.environ", {}, clear=True):
+        res = notifications.notify_twilio_voice_call(
+            incident_id="INC-CALL-001",
+            service="database",
+            reason="Outage",
+        )
+        assert res["provider"] == "twilio_voice"
+        assert res["accepted"] is False
+        assert res["status"] == "unconfigured"
+
+
+def test_twilio_voice_call_success_mocked():
+    """Twilio voice call reports accepted=True and call_queued on HTTP 201 with call SID."""
+    mock_resp = MagicMock()
+    mock_resp.getcode.return_value = 201
+    mock_resp.read.return_value = json.dumps({"sid": "CA99887766", "status": "queued"}).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+
+    env_vars = {
+        "TWILIO_ACCOUNT_SID": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "TWILIO_AUTH_TOKEN": "secret_token",
+        "TWILIO_FROM_NUMBER": "+1234567890",
+        "TWILIO_TO_NUMBER": "+919876543210",
+    }
+
+    with patch.dict("os.environ", env_vars), patch("urllib.request.urlopen", return_value=mock_resp):
+        res = notifications.notify_twilio_voice_call(
+            incident_id="INC-CALL-002",
+            service="backend_api",
+            reason="High error rate",
+        )
+        assert res["accepted"] is True
+        assert res["status"] == "call_queued"
+        assert res["call_sid"] == "CA99887766"
+        assert res["destination"] == "+919876543210"
 
 
 def test_twilio_voice_call_endpoint():
-    """POST /notifications/call-test endpoint returns disabled response."""
-    resp = client.post("/notifications/call-test")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["accepted"] is False
-    assert data["status"] == "disabled_by_policy"
+    """POST /notifications/call-test endpoint executes voice call verification."""
+    with patch("app.notifications.notify_twilio_voice_call") as mock_call:
+        mock_call.return_value = {
+            "provider": "twilio_voice",
+            "accepted": True,
+            "status": "call_queued",
+            "call_sid": "CA112233",
+        }
+        resp = client.post("/notifications/call-test")
+        assert resp.status_code == 200
+        assert resp.json()["accepted"] is True
+
 

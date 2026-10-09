@@ -124,6 +124,22 @@ def dispatch_sos_incident(
         failure_type=failure_type,
     )
 
+    # 5b. Dispatch automated Twilio emergency voice call if configured
+    notif_cfg = notifications.get_notification_config()
+    if notif_cfg.get("twilio_configured"):
+        call_result = notifications.notify_twilio_voice_call(
+            incident_id=incident["id"],
+            service=clean_service,
+            reason=clean_reason,
+        )
+        state.record_audit_event(
+            incident_id=incident["id"],
+            event_type="sos_voice_call_dispatched" if call_result.get("accepted") else "sos_voice_call_failed",
+            service=clean_service,
+            details=call_result,
+        )
+        incident["voice_call_status"] = call_result
+
     # Record notification audit log
     state.record_audit_event(
         incident_id=incident["id"],
@@ -133,6 +149,7 @@ def dispatch_sos_incident(
     )
 
     incident["notification_status"] = notif_result
+
     state.save_incident(incident)
 
     # 6. Recovery workflow integration (if requested)
