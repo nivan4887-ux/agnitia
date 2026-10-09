@@ -5,8 +5,7 @@ import {
   Flame,
   Network,
   ClipboardList,
-  Shield,
-  Tent,
+  FileCode,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
     },
     { id: 'engine', label: 'Recovery Engine', icon: Flame },
+    { id: 'code_review', label: 'Code Review', icon: FileCode },
     { id: 'graph', label: 'Dependency Graph', icon: Network },
     { id: 'audit', label: 'Audit Log', icon: ClipboardList },
   ];
@@ -38,20 +38,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="space-y-6">
         {/* Brand Header */}
         <div className="flex items-start space-x-3 px-2 pt-2">
-          <div className="w-9 h-9 rounded-xl bg-[#D95A1E] flex items-center justify-center text-white shadow-md shrink-0">
-            <Shield className="w-5 h-5 fill-white/20" />
+          <div className="w-10 h-10 rounded-xl bg-white p-1.5 flex items-center justify-center shadow-md shrink-0 overflow-hidden">
+            <img src="/logo.png" alt="BRIDGE Logo" className="w-full h-full object-contain" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center space-x-2">
-              <span className="text-base font-bold text-white tracking-tight">
-                RecoverOps
+              <span className="text-base font-black text-white tracking-wider font-mono">
+                BRIDGE
               </span>
               <span className="px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-white/10 text-stone-300 rounded">
-                v0.2.0
+                v1.0.0
               </span>
             </div>
-            <p className="text-[11px] text-stone-400 truncate leading-tight mt-0.5">
-              Dependency-Aware Incident Recovery
+            <p className="text-[11px] text-stone-400 truncate leading-tight mt-0.5" title="Backend Recovery & Intelligent Dependency Governance Engine">
+              Detect. Recover. Verify.
             </p>
           </div>
         </div>
@@ -87,15 +87,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
       </div>
 
-      {/* Bottom Stay Calm Callout Box */}
+      {/* Bottom Governance Callout Box */}
       <div className="mt-8 pt-4 border-t border-white/10 px-2 flex items-center space-x-3">
-        <div className="w-8 h-8 rounded-lg bg-[#D95A1E]/20 text-[#D95A1E] flex items-center justify-center shrink-0">
-          <Tent className="w-4 h-4" />
+        <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center shrink-0 overflow-hidden">
+          <img src="/logo.png" alt="BRIDGE" className="w-full h-full object-contain" />
         </div>
         <div className="leading-tight">
-          <p className="text-xs font-bold text-white">Stay calm.</p>
-          <p className="text-xs font-bold text-white">Recover faster.</p>
-          <span className="text-[10px] text-stone-400 font-mono">RecoverOps</span>
+          <p className="text-xs font-bold text-white">Detect. Recover.</p>
+          <p className="text-xs font-bold text-white">Verify.</p>
+          <span className="text-[10px] text-stone-400 font-mono">BRIDGE Platform</span>
         </div>
       </div>
     </aside>

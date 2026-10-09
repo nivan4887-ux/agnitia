@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Approval,
   AuditEvent,
+  ChangeSet,
   DependenciesResponse,
   Incident,
   RecoveryPlanResponse,
@@ -24,6 +25,8 @@ import { IncidentsView } from './components/IncidentsView';
 import { RecoveryEngineView } from './components/RecoveryEngineView';
 import { DependencyGraphView } from './components/DependencyGraphView';
 import { AuditLogView } from './components/AuditLogView';
+import { CodeReviewView } from './components/CodeReviewView';
+import { CodeChangeReviewModal } from './components/CodeChangeReviewModal';
 import { AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -52,6 +55,7 @@ export const App: React.FC = () => {
   // UI state
   const [selectedService, setSelectedService] = useState<string>('backend_api');
   const [previewPlan, setPreviewPlan] = useState<RecoveryPlanResponse | null>(null);
+  const [reviewChangeSet, setReviewChangeSet] = useState<ChangeSet | null>(null);
   const [isExecutingRecovery, setIsExecutingRecovery] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
@@ -120,7 +124,7 @@ export const App: React.FC = () => {
       setBackendOnline(false);
       if (!isSilent) {
         setErrorMessage(
-          `Unable to connect to RecoverOps backend (${err.message || 'Network Error'}). Make sure FastAPI server is running on port 8000.`
+          `Unable to connect to BRIDGE backend (${err.message || 'Network Error'}). Make sure FastAPI server is running on port 8000.`
         );
       }
     } finally {
@@ -157,12 +161,11 @@ export const App: React.FC = () => {
       if (!incidentId) {
         throw new Error('No active incident selected for recovery.');
       }
-      await api.startRecovery(incidentId);
-      showSuccess('Recovery sequence successfully executed through allowlisted adapter!');
-      fetchData();
+      // Launch 12-15s AI Coding Agent Review & Recovery Orchestration
+      const res = await api.proposeIncidentRepair(incidentId);
+      setReviewChangeSet(res.changeset);
     } catch (err: any) {
-      showError(err.message || 'Failed to start recovery sequence');
-    } finally {
+      showError(err.message || 'Failed to initialize AI recovery orchestrator');
       setIsExecutingRecovery(false);
     }
   };
@@ -183,6 +186,15 @@ export const App: React.FC = () => {
       fetchData();
     } catch (err: any) {
       showError(err.message || `Failed to simulate failure on ${service}`);
+    }
+  };
+
+  const handleReviewCodePatch = async (incidentId: string) => {
+    try {
+      const res = await api.proposeIncidentRepair(incidentId);
+      setReviewChangeSet(res.changeset);
+    } catch (err: any) {
+      showError(err.message || 'Failed to generate code repair changeset');
     }
   };
 
@@ -249,7 +261,7 @@ export const App: React.FC = () => {
             <DemoStoreView
               onIncidentCreated={() => {
                 fetchData();
-                showSuccess('Real HTTP 503 outage detected! Incident created in RecoverOps.');
+                showSuccess('Real HTTP 503 outage detected! Incident created in BRIDGE.');
               }}
               onNavigateToDashboard={() => {
                 setActiveTab('dashboard');
@@ -278,6 +290,12 @@ export const App: React.FC = () => {
               onRefresh={() => fetchData()}
               onError={showError}
               isExecuting={isExecutingRecovery}
+            />
+          ) : activeNav === 'code_review' ? (
+            <CodeReviewView
+              onRefresh={() => fetchData()}
+              onError={showError}
+              onSuccess={showSuccess}
             />
           ) : activeNav === 'graph' ? (
             <DependencyGraphView
@@ -336,6 +354,7 @@ export const App: React.FC = () => {
                     assessment={assessment}
                     onExecuteRecovery={handleStartRecovery}
                     onViewDetails={() => handlePreviewPlan(selectedService || 'backend_api')}
+                    onReviewCodePatch={handleReviewCodePatch}
                     isExecuting={isExecutingRecovery}
                   />
 
@@ -366,8 +385,43 @@ export const App: React.FC = () => {
         plan={previewPlan}
         onClose={() => setPreviewPlan(null)}
       />
+
+      {/* Code Change Review Modal */}
+      <CodeChangeReviewModal
+        changeSet={reviewChangeSet}
+        onUpdateChangeSet={(updated) => setReviewChangeSet(updated)}
+        onApplied={async (appliedCs) => {
+          setReviewChangeSet(null);
+          setActiveTab('dashboard');
+          setActiveNav('overview');
+          showSuccess(`Change set ${appliedCs.id} applied. Executing live health verification probes...`);
+          try {
+            if (appliedCs.incident_id) {
+              const res = await api.startRecovery(appliedCs.incident_id);
+              if (res.incident.status === 'awaiting_approval') {
+                showSuccess('Recovery initiated: High-risk action paused awaiting operator approval.');
+              } else if (res.incident.status === 'resolved') {
+                showSuccess('Recovery sequence verified and completed successfully across all health probes.');
+              } else if (res.incident.status === 'failed') {
+                const lastStep = res.incident.recovery_steps?.[res.incident.recovery_steps.length - 1];
+                showError(`Recovery failed: ${lastStep?.reason || 'Health verification failed'}`);
+              }
+            }
+            await fetchData();
+          } catch (e: any) {
+            showError(e.message || 'Recovery verification error');
+          } finally {
+            setIsExecutingRecovery(false);
+          }
+        }}
+        onClose={() => {
+          setReviewChangeSet(null);
+          setIsExecutingRecovery(false);
+        }}
+      />
     </div>
   );
 };
 
 export default App;
+

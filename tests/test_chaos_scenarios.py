@@ -1,5 +1,5 @@
 """
-RecoverOps – Multi-Scenario Chaos Engine Test Suite.
+BRIDGE – Multi-Scenario Chaos Engine Test Suite.
 Tests all 8 Scenarios (A through H), unknown scenario rejection, inventory failure,
 checkout failure, payment degradation, recovery verification failure, and reset.
 """

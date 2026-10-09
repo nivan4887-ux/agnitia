@@ -1,5 +1,5 @@
 """
-RecoverOps – Comprehensive Approval Center End-to-End Test Suite.
+BRIDGE – Comprehensive Approval Center End-to-End Test Suite.
 """
 
 from __future__ import annotations

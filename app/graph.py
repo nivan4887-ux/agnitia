@@ -1,5 +1,5 @@
 """
-RecoverOps – Dependency graph logic (NetworkX).
+BRIDGE – Dependency graph logic (NetworkX).
 
 The graph is a directed graph where an edge A → B means "B depends on A"
 (i.e. A must be healthy before B can function).
@@ -45,6 +45,8 @@ def get_downstream_dependents(graph: nx.DiGraph, service: str) -> list[str]:
     Uses BFS along out-edges (successors) because an edge A → B means
     B depends on A, so successors of A are its direct dependents.
     """
+    if service not in graph:
+        return []
     return list(nx.descendants(graph, service))
 
 
@@ -56,6 +58,9 @@ def recovery_order(graph: nx.DiGraph, service: str) -> list[str]:
     itself, since it must be restored first) and ends with the leaf
     dependents.
     """
+    if service not in graph:
+        return [service]
+
     affected = {service} | set(get_downstream_dependents(graph, service))
     subgraph = graph.subgraph(affected)
 
@@ -78,6 +83,8 @@ def get_prerequisites(graph: nx.DiGraph, service: str) -> list[str]:
     Since edge A → B means B depends on A, predecessors of B are the
     services that must be healthy before B can recover.
     """
+    if service not in graph:
+        return []
     return list(graph.predecessors(service))
 
 

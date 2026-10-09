@@ -1,5 +1,5 @@
 """
-RecoverOps – Multi-Threaded Concurrency and Stress Verification Suite.
+BRIDGE – Multi-Threaded Concurrency and Stress Verification Suite.
 """
 
 from __future__ import annotations

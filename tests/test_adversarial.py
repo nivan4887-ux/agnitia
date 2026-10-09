@@ -1,5 +1,5 @@
 """
-RecoverOps – Adversarial Test Suite for Safety, Truthfulness, Concurrency, and State Consistency.
+BRIDGE – Adversarial Test Suite for Safety, Truthfulness, Concurrency, and State Consistency.
 """
 
 import threading

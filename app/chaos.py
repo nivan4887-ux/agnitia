@@ -1,5 +1,5 @@
 """
-RecoverOps – Multi-Scenario Chaos Engine and Fault Injection Framework.
+BRIDGE – Multi-Scenario Chaos Engine and Fault Injection Framework.
 
 Defines 8 deterministic, structured chaos scenarios (A through H) with target-specific
 state mutations, distinct HTTP response behaviors, diagnostic error codes,

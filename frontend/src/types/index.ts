@@ -200,3 +200,114 @@ export interface PaymentProcessResponse {
   amount: number;
   currency: string;
 }
+
+export type RecoveryStage =
+  | 'pending'
+  | 'running'
+  | 'verifying'
+  | 'succeeded'
+  | 'failed'
+  | 'awaiting_approval'
+  | 'aborted';
+
+export interface RecoveryJob {
+  id: string;
+  incident_id: string;
+  service: string;
+  stage: RecoveryStage;
+  status: string;
+  current_step: string;
+  current_step_index: number;
+  total_steps: number;
+  recovery_order: string[];
+  action: string | null;
+  logs: string[];
+  evidence?: Record<string, any> | null;
+  root_cause?: {
+    failed_service: string;
+    prerequisites?: string[];
+    downstream_impact?: string[];
+    recovery_order?: string[];
+  } | null;
+  recovery_strategy?: {
+    type?: string;
+    service?: string;
+    action?: string;
+    risk_level?: string;
+    description?: string;
+  } | null;
+  stage_history?: Array<{
+    stage: string;
+    timestamp: string;
+    message: string;
+  }>;
+  health_check_result?: {
+    passed: boolean;
+    health_check_type: string;
+    message: string;
+  } | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  error?: string | null;
+}
+
+export interface RecoveryStartResponse {
+  incident: Incident;
+  job_id?: string;
+  job?: RecoveryJob;
+}
+
+export interface RecoveryJobResponse {
+  job: RecoveryJob;
+}
+
+export interface RecoveryStatusResponse {
+  incident_id: string;
+  status: string;
+  active_job_id?: string;
+  job?: RecoveryJob;
+  jobs?: RecoveryJob[];
+}
+
+export interface ChangedFileReview {
+  file_path: string;
+  filename: string;
+  directory: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  additions: number;
+  deletions: number;
+  original_content_hash: string;
+  original_content: string;
+  proposed_content: string;
+  diff_content: string;
+}
+
+export interface ChangeSet {
+  id: string;
+  incident_id?: string | null;
+  service: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'partially_reviewed' | 'applied';
+  total_files: number;
+  total_additions: number;
+  total_deletions: number;
+  created_at: string;
+  applied_at?: string | null;
+  files: ChangedFileReview[];
+  validation_results?: {
+    passed: boolean;
+    total_checks: number;
+    checks: Array<{
+      file: string;
+      check: string;
+      passed: boolean;
+      error?: string;
+      message?: string;
+    }>;
+    timestamp: string;
+  } | null;
+}
+
+

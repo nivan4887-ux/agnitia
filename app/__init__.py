@@ -1,2 +1,2 @@
-# RecoverOps app package
+# BRIDGE app package
 

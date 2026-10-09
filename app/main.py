@@ -1,21 +1,27 @@
 """
-RecoverOps – FastAPI application and route definitions.
+BRIDGE – Backend Recovery & Intelligent Dependency Governance Engine – FastAPI application.
 """
 
 from __future__ import annotations
 
+import json
 from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app import demo_store, engine, graph, live_adapter, risk_gate, state
+from app import code_changes, demo_store, engine, graph, live_adapter, risk_gate, state, supervisor
 
 app = FastAPI(
-    title="RecoverOps",
-    description="Dependency-aware incident recovery platform – backend API.",
-    version="0.2.0",
+    title="BRIDGE",
+    description=(
+        "Backend Recovery & Intelligent Dependency Governance Engine — "
+        "dependency-aware incident recovery platform that detects service failures, "
+        "analyzes upstream dependencies, coordinates controlled recovery workflows, "
+        "verifies service health, and maintains an auditable record of recovery operations."
+    ),
+    version="1.0.0",
 )
 
 app.add_middleware(
@@ -55,6 +61,19 @@ class RecoveryAssessRequest(BaseModel):
     expected_state_fingerprint: Optional[str] = None
 
 
+class ProposeChangeSetRequest(BaseModel):
+    title: str
+    description: str
+    file_patches: dict[str, str]
+    service: str = "backend_api"
+    incident_id: Optional[str] = None
+
+
+class FileReviewRequest(BaseModel):
+    file_path: str
+    decision: str  # "accepted" | "rejected" | "pending"
+
+
 # ---------------------------------------------------------------------------
 # Existing Milestone 1 Routes (Preserved)
 # ---------------------------------------------------------------------------
@@ -62,7 +81,12 @@ class RecoveryAssessRequest(BaseModel):
 @app.get("/")
 def health():
     """Basic health check."""
-    return {"status": "ok", "service": "RecoverOps"}
+    return {
+        "status": "ok",
+        "service": "BRIDGE",
+        "tagline": "Detect. Recover. Verify.",
+        "full_form": "Backend Recovery & Intelligent Dependency Governance Engine",
+    }
 
 
 @app.get("/services")
@@ -152,11 +176,66 @@ def get_incident(incident_id: str):
     return {"incident": incident}
 
 
+@app.post("/recovery/propose-repair/{incident_id}")
+def propose_repair_endpoint(incident_id: str):
+    """Generate an authoritative proposed source code repair change set for an incident."""
+    try:
+        cs = code_changes.generate_incident_patch(incident_id)
+        inc = state.get_incident(incident_id)
+        return {
+            "incident": inc,
+            "changeset": cs,
+        }
+    except KeyError as ke:
+        raise HTTPException(status_code=404, detail=str(ke))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 @app.post("/recovery/start/{incident_id}")
 def start_recovery_endpoint(incident_id: str):
     """Start sequential dependency-aware recovery for an incident."""
     incident = engine.start_recovery(incident_id)
-    return {"incident": incident}
+    jobs = state.get_jobs_for_incident(incident_id)
+    latest_job = jobs[-1] if jobs else None
+    return {
+        "incident": incident,
+        "job_id": latest_job["id"] if latest_job else None,
+        "job": latest_job,
+    }
+
+
+@app.get("/recovery/jobs/{job_id}")
+def get_recovery_job_endpoint(job_id: str):
+    """Retrieve details, stage progression, and diagnostic logs for a recovery job."""
+    job = state.get_recovery_job(job_id)
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Recovery job '{job_id}' not found",
+        )
+    return {"job": job}
+
+
+@app.get("/recovery/status/{incident_id}")
+def get_recovery_status_endpoint(incident_id: str):
+    """Retrieve recovery status and active job for an incident."""
+    incident = state.get_incident(incident_id)
+    if not incident:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Incident '{incident_id}' not found",
+        )
+    jobs = state.get_jobs_for_incident(incident_id)
+    latest_job = jobs[-1] if jobs else None
+    return {
+        "incident_id": incident_id,
+        "status": incident.get("status"),
+        "active_job_id": incident.get("active_job_id"),
+        "job": latest_job,
+        "jobs": jobs,
+    }
+
 
 
 @app.get("/approvals")
@@ -231,4 +310,183 @@ def run_live_probe_endpoint(auto_create_incident: bool = Query(True)):
     """Execute live HTTP health and products probe, auto-creating a real incident on failure."""
     result = live_adapter.run_live_health_probe(auto_create_incident=auto_create_incident)
     return result
+
+
+# ---------------------------------------------------------------------------
+# Standalone Dedicated Python OS Process Endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/standalone/status")
+def get_standalone_status(port: Optional[int] = None):
+    """Retrieve operational and process supervisor diagnostics for standalone Python demo service."""
+    status_info = supervisor.supervisor.get_status()
+    probe_health = live_adapter.probe_standalone_health(port=port)
+    probe_products = live_adapter.probe_standalone_products(port=port)
+    return {
+        "supervisor": status_info,
+        "health_probe": probe_health,
+        "products_probe": probe_products,
+        "is_healthy": probe_health.get("healthy") and probe_products.get("healthy"),
+    }
+
+
+@app.post("/standalone/start")
+def start_standalone_process(port: Optional[int] = None):
+    """Start the standalone Python demo service process via the safe supervisor."""
+    try:
+        res = supervisor.supervisor.start_service(port=port)
+        return res
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/standalone/stop")
+def stop_standalone_process():
+    """Stop the standalone Python demo service process via the safe supervisor."""
+    res = supervisor.supervisor.stop_service()
+    return res
+
+
+@app.post("/standalone/restart")
+def restart_standalone_process(port: Optional[int] = None):
+    """Restart the standalone Python demo service process via the safe supervisor."""
+    try:
+        res = supervisor.supervisor.restart_service(port=port)
+        return res
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/standalone/fail")
+def fail_standalone_service(port: Optional[int] = None):
+    """Inject failure into the independent Python process via HTTP."""
+    import urllib.error
+    import urllib.request
+
+    target_port = port or supervisor.supervisor.port
+    url = f"http://127.0.0.1:{target_port}/fail"
+    try:
+        req = urllib.request.Request(url, data=b"", headers={"User-Agent": "BRIDGE/1.0"}, method="POST")
+        with urllib.request.urlopen(req, timeout=2.0) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return {"status": "fault_injected", "response": data}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to inject fault into standalone service: {exc}")
+
+
+@app.post("/standalone/probe")
+def probe_standalone_service(auto_create_incident: bool = Query(True), port: Optional[int] = None):
+    """Run real TCP HTTP health and products probe against standalone process."""
+    result = live_adapter.run_standalone_health_probe(auto_create_incident=auto_create_incident, port=port)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Codex-Style Multi-File Code Change & Patch Review Endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/code-changes")
+def list_code_changes(incident_id: Optional[str] = Query(None)):
+    """List all proposed code change sets, optionally filtered by incident_id."""
+    changesets = code_changes.list_changesets(incident_id=incident_id)
+    return {"changesets": changesets}
+
+
+@app.get("/code-changes/{changeset_id}")
+def get_code_changeset(changeset_id: str):
+    """Retrieve full details, files, and diffs for a specific code change set."""
+    cs = code_changes.get_changeset(changeset_id)
+    if not cs:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Code change set '{changeset_id}' not found",
+        )
+    return {"changeset": cs}
+
+
+@app.post("/code-changes/propose")
+def propose_code_changeset(payload: ProposeChangeSetRequest):
+    """Propose a multi-file code change set without modifying the working tree."""
+    try:
+        cs = code_changes.create_changeset(
+            title=payload.title,
+            description=payload.description,
+            file_patches=payload.file_patches,
+            service=payload.service,
+            incident_id=payload.incident_id,
+        )
+        return {"changeset": cs}
+    except ValueError as val_err:
+        raise HTTPException(status_code=400, detail=str(val_err))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to propose code change set: {exc}")
+
+
+@app.post("/code-changes/{changeset_id}/file-review")
+def review_file_endpoint(changeset_id: str, payload: FileReviewRequest):
+    """Review and accept, reject, or reset an individual file in a change set."""
+    try:
+        cs = code_changes.review_file(
+            changeset_id=changeset_id,
+            file_path=payload.file_path,
+            decision=payload.decision,
+        )
+        return {"changeset": cs}
+    except KeyError as ke:
+        raise HTTPException(status_code=404, detail=str(ke))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/code-changes/{changeset_id}/accept-all")
+def accept_all_endpoint(changeset_id: str):
+    """Mark all files in the change set as accepted for application."""
+    try:
+        cs = code_changes.accept_all_files(changeset_id=changeset_id)
+        return {"changeset": cs}
+    except KeyError as ke:
+        raise HTTPException(status_code=404, detail=str(ke))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/code-changes/{changeset_id}/reject-all")
+def reject_all_endpoint(changeset_id: str):
+    """Mark all files in the change set as rejected without touching the disk."""
+    try:
+        cs = code_changes.reject_all_files(changeset_id=changeset_id)
+        return {"changeset": cs}
+    except KeyError as ke:
+        raise HTTPException(status_code=404, detail=str(ke))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/code-changes/{changeset_id}/apply")
+def apply_changeset_endpoint(changeset_id: str):
+    """Safely apply accepted files after verifying SHA-256 hashes and run validation checks."""
+    try:
+        cs = code_changes.apply_changeset(changeset_id=changeset_id)
+        return {
+            "status": "applied",
+            "changeset": cs,
+            "validation_results": cs.get("validation_results"),
+        }
+    except KeyError as ke:
+        raise HTTPException(status_code=404, detail=str(ke))
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except RuntimeError as re:
+        # Conflict / stale hash mismatch
+        raise HTTPException(status_code=409, detail=str(re))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to apply change set: {exc}")
+
+
 

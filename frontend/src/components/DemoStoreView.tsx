@@ -453,16 +453,16 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
 
       {/* 2. Interactive Chaos Scenario & Operator Control Center */}
       {showChaosPanel && (
-        <div className="bg-white border-b border-[#EBE5DB] shadow-xs px-4 sm:px-6 lg:px-8 py-4">
+        <div className="bg-white border-b border-[#EBE5DB] shadow-xs px-4 sm:px-6 lg:px-8 py-3.5">
           <div className="max-w-7xl mx-auto space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center space-x-2.5">
-                <div className="w-7 h-7 rounded-lg bg-[#D95A1E] text-white flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-[#D95A1E] text-white flex items-center justify-center shadow-xs shrink-0">
                   <Flame className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-stone-900 tracking-tight">
-                    Multi-Scenario Chaos Engine & Fault Injection
+                  <h3 className="text-xs font-bold text-stone-900 tracking-tight flex items-center space-x-1.5">
+                    <span>Multi-Scenario Chaos Engine & Fault Injection</span>
                   </h3>
                   <p className="text-[11px] text-stone-500">
                     Select distinct outage scenarios to test deterministic incident recovery.
@@ -471,73 +471,92 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
               </div>
 
               {/* Status Badges */}
-              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span
-                  className={`px-2 py-0.5 rounded border font-semibold flex items-center space-x-1 ${
+                  className={`px-2.5 py-1 rounded-lg border text-xs font-semibold flex items-center space-x-1.5 ${
                     health?.status === 'healthy'
-                      ? 'bg-emerald-50 text-[#2E7D32] border-emerald-200'
-                      : 'bg-rose-50 text-[#D32F2F] border-rose-200 animate-pulse'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                      : 'bg-rose-50 text-rose-800 border-rose-200 animate-pulse'
                   }`}
                 >
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      health?.status === 'healthy' ? 'bg-[#2E7D32]' : 'bg-[#D32F2F]'
+                    className={`w-2 h-2 rounded-full ${
+                      health?.status === 'healthy' ? 'bg-emerald-600' : 'bg-rose-600'
                     }`}
                   />
-                  <span>
-                    Catalog: {health?.status === 'healthy' ? '200 OK' : health?.error_code || '503 DOWN'}
-                  </span>
+                  <span>Catalog: {health?.status === 'healthy' ? '200 OK' : health?.error_code || '503 DOWN'}</span>
                 </span>
 
                 {activeScenario && (
-                  <span className="px-2 py-0.5 rounded bg-amber-50 text-[#E65100] border border-amber-200 font-bold">
-                    Active: {activeScenario.scenario_letter} ({activeScenario.target_service})
+                  <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold font-mono">
+                    Active: [{activeScenario.scenario_letter}] {activeScenario.target_service}
                   </span>
                 )}
 
                 {chaosStatus && (
-                  <span className="hidden xl:inline text-stone-500 text-[10px]">
-                    Subsystems: Catalog <b className={chaosStatus.subsystems.products_catalog === 'healthy' ? 'text-emerald-700' : 'text-rose-600'}>{chaosStatus.subsystems.products_catalog}</b> | Inv <b className={chaosStatus.subsystems.inventory === 'healthy' ? 'text-emerald-700' : 'text-rose-600'}>{chaosStatus.subsystems.inventory}</b> | Checkout <b className={chaosStatus.subsystems.checkout === 'healthy' ? 'text-emerald-700' : 'text-rose-600'}>{chaosStatus.subsystems.checkout}</b> | Payment <b className={chaosStatus.subsystems.payment === 'healthy' ? 'text-emerald-700' : 'text-rose-600'}>{chaosStatus.subsystems.payment}</b>
-                  </span>
+                  <div className="hidden xl:flex items-center space-x-2 bg-stone-100 px-3 py-1 rounded-lg border border-stone-200 text-[11px] font-medium text-stone-600">
+                    <span className="text-stone-400 font-semibold mr-0.5">Subsystems:</span>
+                    <span className="flex items-center space-x-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.products_catalog === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                      <span className="text-stone-700">Catalog</span>
+                    </span>
+                    <span className="text-stone-300">•</span>
+                    <span className="flex items-center space-x-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.inventory === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                      <span className="text-stone-700">Inventory</span>
+                    </span>
+                    <span className="text-stone-300">•</span>
+                    <span className="flex items-center space-x-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.checkout === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                      <span className="text-stone-700">Checkout</span>
+                    </span>
+                    <span className="text-stone-300">•</span>
+                    <span className="flex items-center space-x-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${chaosStatus.subsystems.payment === 'healthy' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                      <span className="text-stone-700">Payment</span>
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Scenario Selector & Action Buttons */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center bg-stone-50 p-3 rounded-xl border border-[#E7E2D9]">
-              <div className="lg:col-span-6">
-                <label className="block text-[11px] font-bold text-stone-700 mb-1">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center bg-stone-50/80 p-3.5 rounded-2xl border border-[#E7E2D9]">
+              <div className="lg:col-span-6 space-y-1">
+                <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider">
                   Choose Chaos Outage Scenario:
                 </label>
-                <select
-                  value={selectedScenarioId}
-                  onChange={(e) => setSelectedScenarioId(e.target.value)}
-                  disabled={isInjecting || isResetting}
-                  className="w-full bg-white border border-[#E7E2D9] rounded-lg px-2.5 py-1.5 text-xs text-stone-800 font-mono focus:outline-none"
-                >
-                  {scenarios.map((sc) => (
-                    <option key={sc.id} value={sc.id}>
-                      [{sc.scenario_letter}] {sc.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={selectedScenarioId}
+                    onChange={(e) => setSelectedScenarioId(e.target.value)}
+                    disabled={isInjecting || isResetting}
+                    className="w-full bg-white border border-[#DCD5C9] rounded-xl pl-3 pr-8 py-2 text-xs font-semibold text-stone-800 shadow-xs focus:outline-none focus:ring-1 focus:ring-[#D95A1E] transition cursor-pointer"
+                  >
+                    {scenarios.map((sc) => (
+                      <option key={sc.id} value={sc.id}>
+                        [{sc.scenario_letter}] {sc.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 {lastProbe && (
-                  <p className="text-[10px] font-mono text-stone-500 mt-1">
-                    Last Probe: <span className={lastProbe.is_healthy ? 'text-emerald-700 font-semibold' : 'text-rose-600 font-semibold'}>{lastProbe.is_healthy ? '200 OK' : `${lastProbe.health_probe.status_code} OUTAGE`}</span>
+                  <p className="text-[10px] font-mono text-stone-500">
+                    Last Probe Result: <span className={lastProbe.is_healthy ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>{lastProbe.is_healthy ? '200 OK (All Healthy)' : `${lastProbe.health_probe.status_code} OUTAGE DETECTED`}</span>
                   </p>
                 )}
               </div>
 
-              <div className="lg:col-span-6 flex flex-wrap items-center justify-end gap-2">
+              <div className="lg:col-span-6 flex flex-wrap items-center justify-end gap-2 pt-1 lg:pt-0">
                 <button
                   onClick={() => handleInjectScenario()}
                   disabled={isInjecting}
-                  className="px-3 py-1.5 bg-[#D95A1E] hover:bg-[#B84511] text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-1.5 transition disabled:opacity-50 cursor-pointer"
+                  className="px-3.5 py-2 bg-[#D95A1E] hover:bg-[#C2410C] text-white text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1.5 transition disabled:opacity-50 cursor-pointer"
                 >
                   {isInjecting ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Flame className="w-3.5 h-3.5" />
+                    <Flame className="w-3.5 h-3.5 fill-white text-white" />
                   )}
                   <span>Inject Fault</span>
                 </button>
@@ -545,16 +564,16 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
                 <button
                   onClick={handleManualProbe}
                   disabled={isProbing}
-                  className="px-3 py-1.5 bg-white hover:bg-stone-100 border border-[#E7E2D9] text-stone-800 text-xs font-semibold rounded-lg shadow-2xs flex items-center space-x-1.5 transition cursor-pointer"
+                  className="px-3.5 py-2 bg-white hover:bg-stone-50 border border-[#DCD5C9] text-stone-800 text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1.5 transition cursor-pointer"
                 >
-                  <Activity className={`w-3.5 h-3.5 ${isProbing ? 'animate-spin text-[#D95A1E]' : ''}`} />
+                  <Activity className={`w-3.5 h-3.5 text-stone-600 ${isProbing ? 'animate-spin text-[#D95A1E]' : ''}`} />
                   <span>Run Probe</span>
                 </button>
 
                 <button
                   onClick={handleAutoRecover}
                   disabled={isRecovering}
-                  className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-1.5 transition cursor-pointer"
+                  className="px-3.5 py-2 bg-[#1B5E20] hover:bg-[#2E7D32] text-white text-xs font-bold rounded-xl shadow-xs flex items-center space-x-1.5 transition cursor-pointer"
                 >
                   {isRecovering ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -567,10 +586,10 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
                 <button
                   onClick={handleResetChaos}
                   disabled={isResetting}
-                  className="px-2.5 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+                  className="p-2 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl transition cursor-pointer"
                   title="Reset demo baseline"
                 >
-                  <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? 'animate-spin' : ''}`} />
+                  <RotateCcw className={`w-4 h-4 ${isResetting ? 'animate-spin' : ''}`} />
                 </button>
               </div>
             </div>
@@ -584,13 +603,13 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
           <div className="flex items-center justify-between h-18 gap-4">
             {/* Logo */}
             <div
-              className="cursor-pointer select-none"
+              className="cursor-pointer select-none shrink-0"
               onClick={() => {
                 setSelectedCategory('All');
                 setSearchQuery('');
               }}
             >
-              <span className="text-xl sm:text-2xl font-black text-[#1C130D] tracking-widest uppercase">
+              <span className="text-xl sm:text-2xl font-black text-[#1C130D] tracking-widest uppercase font-serif">
                 AGNITIA
               </span>
               <span className="block text-[9px] font-mono tracking-widest text-[#D95A1E] uppercase font-bold -mt-1">
@@ -604,7 +623,7 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                     selectedCategory === cat
                       ? 'bg-[#1C130D] text-white'
                       : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
@@ -616,21 +635,21 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
             </nav>
 
             {/* Search Bar & Action Buttons */}
-            <div className="flex items-center space-x-3">
-              {/* Search Input */}
+            <div className="flex items-center space-x-3 shrink-0">
+              {/* Search Input with Proper Padding & Vertical Centering */}
               <div className="relative hidden md:block">
-                <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-2.5" />
+                <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search sarees, sherwanis, jackets..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8.5 pr-3 py-1.5 bg-stone-50 border border-[#E7E2D9] rounded-xl text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D95A1E] w-56 lg:w-72"
+                  className="pl-10 pr-8 py-2 bg-stone-50 border border-[#E7E2D9] rounded-xl text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D95A1E] focus:border-[#D95A1E] w-56 lg:w-72 transition"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-600"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -654,7 +673,7 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
               {/* Shopping Bag Button */}
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="px-3 py-2 rounded-xl bg-[#1C130D] hover:bg-stone-800 text-white text-xs font-semibold flex items-center space-x-2 shadow-xs transition cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-[#1C130D] hover:bg-stone-800 text-white text-xs font-semibold flex items-center space-x-2 shadow-xs transition cursor-pointer"
               >
                 <ShoppingBag className="w-4 h-4 text-[#D95A1E]" />
                 <span className="hidden sm:inline">Bag</span>
@@ -715,17 +734,31 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
               </div>
             </div>
 
-            <div className="lg:col-span-5 grid grid-cols-2 gap-3">
-              <img
-                src="https://images.unsplash.com/photo-1597983073493-88cd35cf93b0?auto=format&fit=crop&w=600&q=80"
-                alt="Men Banarasi Sherwani"
-                className="w-full h-56 object-cover rounded-2xl shadow-lg"
-              />
-              <img
-                src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80"
-                alt="Women Kanjeevaram Saree"
-                className="w-full h-56 object-cover rounded-2xl shadow-lg mt-4"
-              />
+            <div className="lg:col-span-5 grid grid-cols-2 gap-4 items-center">
+              <div className="relative group overflow-hidden rounded-2xl shadow-xl border border-white/10">
+                <img
+                  src="https://images.unsplash.com/photo-1597983073493-88cd35cf93b0?auto=format&fit=crop&w=600&q=80"
+                  alt="Men Banarasi Sherwani"
+                  className="w-full h-64 sm:h-72 object-cover group-hover:scale-105 transition duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#D95A1E] font-bold block">Editorial</span>
+                  <p className="text-xs font-bold leading-tight">Banarasi Silk Weave</p>
+                </div>
+              </div>
+              <div className="relative group overflow-hidden rounded-2xl shadow-xl border border-white/10">
+                <img
+                  src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80"
+                  alt="Women Kanjeevaram Saree"
+                  className="w-full h-64 sm:h-72 object-cover group-hover:scale-105 transition duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#D95A1E] font-bold block">Artisanal</span>
+                  <p className="text-xs font-bold leading-tight">Kanjeevaram Bridal</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -756,7 +789,7 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
                 onClick={handleAutoRecover}
                 className="px-4 py-2 bg-[#D95A1E] hover:bg-[#B84511] text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer"
               >
-                Auto-Recover via RecoverOps
+                Auto-Recover via BRIDGE
               </button>
             </div>
           </div>
@@ -1425,7 +1458,7 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
               Order Placed Successfully!
             </h3>
             <p className="text-xs text-stone-500">
-              Your simulated couture order has been processed and logged in the RecoverOps pipeline.
+              Your simulated couture order has been processed and logged in the BRIDGE pipeline.
             </p>
 
             <div className="p-4 bg-stone-50 rounded-2xl border border-[#E7E2D9] text-left text-xs font-mono space-y-1.5">
@@ -1492,9 +1525,9 @@ export const DemoStoreView: React.FC<DemoStoreViewProps> = ({
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-white font-bold text-xs uppercase tracking-wider">RecoverOps Platform</h4>
+            <h4 className="text-white font-bold text-xs uppercase tracking-wider">BRIDGE Platform</h4>
             <p className="text-[11px] leading-relaxed text-stone-400">
-              Live e-commerce demo backed by RecoverOps dependency-aware autonomous incident remediation and risk-gated recovery orchestration.
+              Live e-commerce demo backed by BRIDGE dependency-aware autonomous incident remediation and risk-gated recovery orchestration.
             </p>
           </div>
         </div>

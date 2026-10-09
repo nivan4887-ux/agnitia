@@ -1,5 +1,5 @@
 """
-RecoverOps – Tests for Live Demo Store, Real HTTP Health Probes,
+BRIDGE – Tests for Live Demo Store, Real HTTP Health Probes,
 and Restricted Allowlisted Recovery Adapter.
 """
 
@@ -57,7 +57,7 @@ class TestLiveDemoStore:
         assert data_p["detail"]["error"] == "Products API unavailable"
 
     def test_live_probe_detects_failure_and_creates_incident(self):
-        """Live HTTP probe detects 503 failure and automatically records incident in RecoverOps."""
+        """Live HTTP probe detects 503 failure and automatically records incident in BRIDGE."""
         client.post("/demo/chaos/fail", json={"reason": "Simulated pool exhaustion"})
 
         r_probe = client.post("/live/probe?auto_create_incident=true")
@@ -70,7 +70,7 @@ class TestLiveDemoStore:
         incident_id = data["incident"]["id"]
         assert data["incident"]["failed_service"] == "backend_api"
 
-        # Check that backend_api is marked failed in RecoverOps state
+        # Check that backend_api is marked failed in BRIDGE state
         r_srv = client.get("/services")
         assert r_srv.json()["services"]["backend_api"] == "failed"
         assert r_srv.json()["services"]["order_service"] == "degraded"
@@ -83,7 +83,7 @@ class TestLiveDemoStore:
         assert probe_events[0]["details"]["observed_http_status"] == 503
 
     def test_allowlisted_recovery_restores_live_service_and_verifies_200(self):
-        """RecoverOps runs allowlisted recovery, restores demo Products API, and verifies HTTP 200."""
+        """BRIDGE runs allowlisted recovery, restores demo Products API, and verifies HTTP 200."""
         # 1. Trip the live demo store
         client.post("/demo/chaos/fail")
         probe = client.post("/live/probe?auto_create_incident=true").json()
@@ -92,7 +92,7 @@ class TestLiveDemoStore:
         # Verify live store is currently down
         assert client.get("/demo/health").status_code == 503
 
-        # 2. Execute RecoverOps recovery sequence
+        # 2. Execute BRIDGE recovery sequence
         r_rec = client.post(f"/recovery/start/{incident_id}")
         assert r_rec.status_code == 200
         inc = r_rec.json()["incident"]

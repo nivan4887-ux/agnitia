@@ -1,4 +1,4 @@
-import {
+import type {
   Approval,
   AuditEvent,
   ChaosScenario,
@@ -7,11 +7,15 @@ import {
   DemoHealthResponse,
   DemoProduct,
   DependenciesResponse,
+  ChangeSet,
   Incident,
   LiveProbeResult,
   PaymentProcessResponse,
   RecoveryAssessment,
   RecoveryPlanResponse,
+  RecoveryStartResponse,
+  RecoveryJobResponse,
+  RecoveryStatusResponse,
   ServiceHealth,
 } from '../types';
 
@@ -94,10 +98,26 @@ export const api = {
     return fetchJson(`${API_BASE_URL}/recovery/plan/${encodeURIComponent(serviceName)}`);
   },
 
-  startRecovery: async (incidentId: string): Promise<{ incident: Incident }> => {
+  startRecovery: async (incidentId: string): Promise<RecoveryStartResponse> => {
     return fetchJson(`${API_BASE_URL}/recovery/start/${encodeURIComponent(incidentId)}`, {
       method: 'POST',
     });
+  },
+
+  proposeIncidentRepair: async (
+    incidentId: string
+  ): Promise<{ incident: Incident; changeset: ChangeSet }> => {
+    return fetchJson(`${API_BASE_URL}/recovery/propose-repair/${encodeURIComponent(incidentId)}`, {
+      method: 'POST',
+    });
+  },
+
+  getRecoveryJob: async (jobId: string): Promise<RecoveryJobResponse> => {
+    return fetchJson(`${API_BASE_URL}/recovery/jobs/${encodeURIComponent(jobId)}`);
+  },
+
+  getRecoveryStatus: async (incidentId: string): Promise<RecoveryStatusResponse> => {
+    return fetchJson(`${API_BASE_URL}/recovery/status/${encodeURIComponent(incidentId)}`);
   },
 
   getApprovals: async (status?: string): Promise<{ approvals: Approval[] }> => {
@@ -268,4 +288,102 @@ export const api = {
       body: JSON.stringify(payload),
     });
   },
+
+  // Standalone OS Process Management APIs
+  getStandaloneStatus: async (port?: number): Promise<{
+    supervisor: {
+      running: boolean;
+      pid: number | null;
+      control_backend_pid: number;
+      port: number;
+      entrypoint: string;
+      started_at: string | null;
+      exit_code: number | null;
+      log_history_count: number;
+      recent_logs: string[];
+    };
+    health_probe: any;
+    products_probe: any;
+    is_healthy: boolean;
+  }> => {
+    const query = port ? `?port=${port}` : '';
+    return fetchJson(`${API_BASE_URL}/standalone/status${query}`);
+  },
+
+  startStandaloneProcess: async (port?: number): Promise<any> => {
+    const query = port ? `?port=${port}` : '';
+    return fetchJson(`${API_BASE_URL}/standalone/start${query}`, { method: 'POST' });
+  },
+
+  stopStandaloneProcess: async (): Promise<any> => {
+    return fetchJson(`${API_BASE_URL}/standalone/stop`, { method: 'POST' });
+  },
+
+  failStandaloneProcess: async (port?: number): Promise<any> => {
+    const query = port ? `?port=${port}` : '';
+    return fetchJson(`${API_BASE_URL}/standalone/fail${query}`, { method: 'POST' });
+  },
+
+  probeStandaloneService: async (autoCreateIncident: boolean = true, port?: number): Promise<any> => {
+    const params = new URLSearchParams();
+    params.append('auto_create_incident', String(autoCreateIncident));
+    if (port) params.append('port', String(port));
+    return fetchJson(`${API_BASE_URL}/standalone/probe?${params.toString()}`, { method: 'POST' });
+  },
+
+  // Codex-Style Code Changes & Review APIs
+  listCodeChanges: async (incidentId?: string): Promise<{ changesets: ChangeSet[] }> => {
+    const query = incidentId ? `?incident_id=${encodeURIComponent(incidentId)}` : '';
+    return fetchJson(`${API_BASE_URL}/code-changes${query}`);
+  },
+
+  getCodeChangeSet: async (changesetId: string): Promise<{ changeset: ChangeSet }> => {
+    return fetchJson(`${API_BASE_URL}/code-changes/${encodeURIComponent(changesetId)}`);
+  },
+
+  proposeCodeChangeSet: async (payload: {
+    title: string;
+    description: string;
+    file_patches: Record<string, string>;
+    service?: string;
+    incident_id?: string;
+  }): Promise<{ changeset: ChangeSet }> => {
+    return fetchJson(`${API_BASE_URL}/code-changes/propose`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  reviewFile: async (
+    changesetId: string,
+    filePath: string,
+    decision: 'accepted' | 'rejected' | 'pending'
+  ): Promise<{ changeset: ChangeSet }> => {
+    return fetchJson(`${API_BASE_URL}/code-changes/${encodeURIComponent(changesetId)}/file-review`, {
+      method: 'POST',
+      body: JSON.stringify({ file_path: filePath, decision }),
+    });
+  },
+
+  acceptAllFiles: async (changesetId: string): Promise<{ changeset: ChangeSet }> => {
+    return fetchJson(`${API_BASE_URL}/code-changes/${encodeURIComponent(changesetId)}/accept-all`, {
+      method: 'POST',
+    });
+  },
+
+  rejectAllFiles: async (changesetId: string): Promise<{ changeset: ChangeSet }> => {
+    return fetchJson(`${API_BASE_URL}/code-changes/${encodeURIComponent(changesetId)}/reject-all`, {
+      method: 'POST',
+    });
+  },
+
+  applyChangeSet: async (
+    changesetId: string
+  ): Promise<{ status: string; changeset: ChangeSet; validation_results: any }> => {
+    return fetchJson(`${API_BASE_URL}/code-changes/${encodeURIComponent(changesetId)}/apply`, {
+      method: 'POST',
+    });
+  },
 };
+
+

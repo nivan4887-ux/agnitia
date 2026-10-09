@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Shield,
   Home,
   AlertOctagon,
   Flame,
@@ -10,6 +9,7 @@ import {
   LayoutGrid,
   Store,
   Clock,
+  FileCode,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -57,6 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
       badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
     },
     { id: 'engine', label: 'Recovery Engine', icon: Flame },
+    { id: 'code_review', label: 'Code Review', icon: FileCode },
     { id: 'graph', label: 'Dependency Graph', icon: Network },
     { id: 'audit', label: 'Audit Log', icon: ClipboardList },
   ];
@@ -76,15 +77,15 @@ export const Header: React.FC<HeaderProps> = ({
                 onSelectTab('dashboard');
               }}
             >
-              <div className="w-9 h-9 rounded-xl bg-[#D95A1E] flex items-center justify-center text-white shadow-md">
-                <Shield className="w-5 h-5 fill-white/20" />
+              <div className="w-9 h-9 rounded-xl bg-white p-1 flex items-center justify-center shadow-md overflow-hidden">
+                <img src="/logo.png" alt="BRIDGE Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-base font-bold text-white tracking-tight">
-                  RecoverOps
+                <span className="text-base font-black text-white tracking-wider font-mono">
+                  BRIDGE
                 </span>
                 <span className="px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-white/10 text-stone-300 rounded">
-                  v0.2.0
+                  v1.0.0
                 </span>
               </div>
             </div>
@@ -93,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="hidden md:block h-6 w-px bg-stone-700/60" />
 
             {/* Navigation Tabs */}
-            <nav className="hidden lg:flex items-center space-x-1">
+            <nav className="hidden lg:flex items-center space-x-1 shrink-0">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeNav === item.id && activeTab === 'dashboard';
@@ -105,13 +106,13 @@ export const Header: React.FC<HeaderProps> = ({
                       onSelectNav(item.id);
                       onSelectTab('dashboard');
                     }}
-                    className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                       isActive
                         ? 'bg-[#D95A1E] text-white shadow-sm'
                         : 'text-stone-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-stone-400'}`} />
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-stone-400'}`} />
                     <span>{item.label}</span>
                     {item.badge !== undefined && (
                       <span className="ml-1 px-1.5 py-0.2 rounded-full bg-[#D32F2F] text-white text-[10px] font-bold">

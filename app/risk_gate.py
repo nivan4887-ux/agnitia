@@ -1,5 +1,5 @@
 """
-RecoverOps – Recovery Confidence & Risk Gate.
+BRIDGE – Recovery Confidence & Risk Gate.
 
 Performs deterministic, rule-based assessment of recovery readiness,
 evaluating dependency health, graph cycles, blast radius, high-risk playbooks,

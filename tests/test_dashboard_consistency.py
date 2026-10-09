@@ -1,5 +1,5 @@
 """
-RecoverOps – Dashboard Data Consistency Test Suite.
+BRIDGE – Dashboard Data Consistency Test Suite.
 Verifies that all overview cards, dependency graph data, incident states,
 approvals, and audit logs are 100% consistent across failure injection,
 live probing, recovery execution, and approval lifecycles.

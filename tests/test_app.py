@@ -1,5 +1,5 @@
 """
-RecoverOps – Comprehensive test suite.
+BRIDGE – Comprehensive test suite.
 Covers Milestone 1 (graph, failure simulation, endpoints)
 and Milestone 2 (recovery execution engine, dependency gates, playbooks,
 risk classifications, approvals, audit logs, and timing).

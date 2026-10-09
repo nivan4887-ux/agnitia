@@ -1,5 +1,5 @@
 """
-RecoverOps – Restricted Allowlisted Live Recovery Adapter and Real HTTP Prober.
+BRIDGE – Restricted Allowlisted Live Recovery Adapter and Real HTTP Prober.
 
 Safely executes allowlisted internal recovery actions on designated local demo services,
 and verifies real HTTP status and product payload health.
@@ -7,6 +7,10 @@ and verifies real HTTP status and product payload health.
 
 from __future__ import annotations
 
+import json
+import time
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from typing import Any
 
@@ -18,6 +22,7 @@ ALLOWLISTED_ACTIONS = {
     "reconnect_and_warm_cache",
     "clear_cache_and_restart",
     "restore_backup_and_restart",
+    "restart_python_demo_service",
 }
 
 ALLOWLISTED_TARGETS = {
@@ -26,6 +31,7 @@ ALLOWLISTED_TARGETS = {
     "order_service",
     "payment_service",
     "website",
+    "standalone_service",
 }
 
 
@@ -122,6 +128,124 @@ def run_live_health_probe(auto_create_incident: bool = True) -> dict[str, Any]:
     }
 
 
+def probe_standalone_health(port: int | None = None) -> dict[str, Any]:
+    """Execute real TCP HTTP health probe against independent Python demo service process."""
+    from app.supervisor import supervisor
+    target_port = port or supervisor.port
+    url = f"http://127.0.0.1:{target_port}/health"
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "BRIDGE-HealthProber/1.0"})
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
+            status_code = resp.getcode()
+            body = json.loads(resp.read().decode("utf-8"))
+            return {
+                "healthy": status_code == 200 and body.get("status") == "healthy",
+                "status_code": status_code,
+                "endpoint": url,
+                "service": "standalone_service",
+                "pid": body.get("pid"),
+                "timestamp": now_iso,
+            }
+    except urllib.error.HTTPError as he:
+        return {
+            "healthy": False,
+            "status_code": he.code,
+            "endpoint": url,
+            "service": "standalone_service",
+            "error": f"HTTP {he.code} {he.reason}",
+            "timestamp": now_iso,
+        }
+    except Exception as exc:
+        return {
+            "healthy": False,
+            "status_code": 0,
+            "endpoint": url,
+            "service": "standalone_service",
+            "error": f"Connection failed: {exc}",
+            "timestamp": now_iso,
+        }
+
+
+def probe_standalone_products(port: int | None = None) -> dict[str, Any]:
+    """Execute real TCP HTTP products catalog probe against independent Python demo service process."""
+    from app.supervisor import supervisor
+    target_port = port or supervisor.port
+    url = f"http://127.0.0.1:{target_port}/products"
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "BRIDGE-HealthProber/1.0"})
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
+            status_code = resp.getcode()
+            body = json.loads(resp.read().decode("utf-8"))
+            products = body.get("products", [])
+            return {
+                "healthy": status_code == 200 and len(products) > 0,
+                "status_code": status_code,
+                "endpoint": url,
+                "service": "standalone_service",
+                "products_returned": len(products),
+                "pid": body.get("pid"),
+                "timestamp": now_iso,
+            }
+    except urllib.error.HTTPError as he:
+        return {
+            "healthy": False,
+            "status_code": he.code,
+            "endpoint": url,
+            "service": "standalone_service",
+            "error": f"HTTP {he.code} {he.reason}",
+            "timestamp": now_iso,
+        }
+    except Exception as exc:
+        return {
+            "healthy": False,
+            "status_code": 0,
+            "endpoint": url,
+            "service": "standalone_service",
+            "error": f"Connection failed: {exc}",
+            "timestamp": now_iso,
+        }
+
+
+def run_standalone_health_probe(auto_create_incident: bool = True, port: int | None = None) -> dict[str, Any]:
+    """Run genuine real TCP HTTP health probe on standalone process and auto-create incident on failure."""
+    health_result = probe_standalone_health(port=port)
+    products_result = probe_standalone_products(port=port)
+
+    is_healthy = health_result["healthy"] and products_result["healthy"]
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    created_incident: dict[str, Any] | None = None
+
+    if not is_healthy and auto_create_incident:
+        with state.state_lock:
+            if state.service_states.get("standalone_service") != "failed":
+                created_incident = state.fail_service("standalone_service")
+                state.record_audit_event(
+                    incident_id=created_incident["id"],
+                    event_type="standalone_http_probe_failure",
+                    service="standalone_service",
+                    details={
+                        "health_probe": health_result,
+                        "products_probe": products_result,
+                        "observed_http_status": health_result["status_code"],
+                        "error": health_result.get("error"),
+                    },
+                )
+
+    return {
+        "is_healthy": is_healthy,
+        "service": "standalone_service",
+        "health_probe": health_result,
+        "products_probe": products_result,
+        "incident": created_incident,
+        "timestamp": now_iso,
+    }
+
+
 def execute_allowlisted_action(service: str, action: str) -> dict[str, Any]:
     """Safely execute an allowlisted internal recovery action on a designated target."""
     if service not in ALLOWLISTED_TARGETS:
@@ -140,7 +264,27 @@ def execute_allowlisted_action(service: str, action: str) -> dict[str, Any]:
             "error": f"Unauthorized recovery action: '{action}'. Must be in allowlist.",
         }
 
-    # Reset corresponding demo subsystem states on recovery
+    # 1. Real Python Operating-System Process Recovery
+    if action == "restart_python_demo_service":
+        from app.supervisor import supervisor
+        res = supervisor.restart_service()
+        if not res.get("success"):
+            return {
+                "success": False,
+                "action": action,
+                "service": service,
+                "error": res.get("error", "Failed to restart standalone Python process"),
+            }
+        return {
+            "success": True,
+            "action": action,
+            "service": service,
+            "message": f"Successfully restarted Python OS process (PID {res.get('pid')}) on port {supervisor.port}",
+            "pid": res.get("pid"),
+            "port": supervisor.port,
+        }
+
+    # 2. Reset corresponding demo subsystem states for in-memory simulated targets
     if service == "backend_api":
         demo_store.set_demo_state(is_healthy=True, reason="")
     elif service == "order_service":
@@ -161,6 +305,35 @@ def execute_allowlisted_action(service: str, action: str) -> dict[str, Any]:
 
 def verify_live_service_health(service: str) -> dict[str, Any]:
     """Verify live HTTP responses for designated service after recovery action."""
+    # 1. Real TCP HTTP Verification for Standalone OS Process
+    if service == "standalone_service":
+        last_health = None
+        last_prods = None
+        for _ in range(8):
+            last_health = probe_standalone_health()
+            last_prods = probe_standalone_products()
+            if last_health["healthy"] and last_prods["healthy"]:
+                return {
+                    "passed": True,
+                    "health_check_type": "real_http_health_probe",
+                    "message": (
+                        f"Real TCP HTTP 200 verification passed for {last_health['endpoint']} "
+                        f"and {last_prods['endpoint']} (PID {last_health.get('pid')})"
+                    ),
+                    "health_probe": last_health,
+                    "products_probe": last_prods,
+                }
+            time.sleep(0.15)
+
+        return {
+            "passed": False,
+            "health_check_type": "real_http_health_probe",
+            "message": f"Real HTTP verification failed for standalone service: {last_health.get('error') if last_health else 'Probe timeout'}",
+            "health_probe": last_health,
+            "products_probe": last_prods,
+        }
+
+    # 2. Live HTTP Probing for Backend API Demo Store
     if service == "backend_api":
         health_probe = probe_demo_health()
         products_probe = probe_demo_products()
@@ -188,3 +361,5 @@ def verify_live_service_health(service: str) -> dict[str, Any]:
         "health_check_type": "invalid_live_target",
         "message": f"Service '{service}' has no configured live HTTP verification probe endpoint.",
     }
+
+

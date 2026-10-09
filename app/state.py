@@ -1,5 +1,5 @@
 """
-RecoverOps – In-memory state management for services, incidents, approvals,
+BRIDGE – In-memory state management for services, incidents, approvals,
 audit logs, and simulation overrides.
 """
 
@@ -26,22 +26,140 @@ incidents: list[dict[str, Any]] = []
 approvals: list[dict[str, Any]] = []
 audit_log: list[dict[str, Any]] = []
 simulation_overrides: dict[str, dict[str, Any]] = {}
+recovery_jobs: dict[str, dict[str, Any]] = {}
 
 
 def reset_state() -> None:
     """Reset all in-memory state – useful for tests."""
-    global service_states, incidents, approvals, audit_log, simulation_overrides
+    global service_states, incidents, approvals, audit_log, simulation_overrides, recovery_jobs
     with state_lock:
         service_states = _new_state()
         incidents.clear()
         approvals.clear()
         audit_log.clear()
         simulation_overrides.clear()
+        recovery_jobs.clear()
         try:
             from app import demo_store
             demo_store.reset_demo_store()
         except ImportError:
             pass
+
+
+def create_recovery_job(
+    incident_id: str,
+    service: str,
+    recovery_order: list[str],
+) -> dict[str, Any]:
+    """Create a new tracked recovery job."""
+    job_id = str(uuid.uuid4())
+    now_iso = datetime.now(timezone.utc).isoformat()
+    job = {
+        "id": job_id,
+        "incident_id": incident_id,
+        "service": service,
+        "stage": "detecting",  # "detecting" | "analyzing" | "planning" | "reviewing" | "awaiting_approval" | "executing" | "running" | "verifying" | "succeeded" | "failed" | "aborted"
+        "status": "recovering",
+        "current_step": recovery_order[0] if recovery_order else service,
+        "current_step_index": 0,
+        "total_steps": len(recovery_order),
+        "recovery_order": recovery_order,
+        "action": None,
+        "evidence": {
+            "incident_id": incident_id,
+            "target_service": service,
+            "detected_at": now_iso,
+        },
+        "root_cause": None,
+        "recovery_strategy": None,
+        "changeset_id": None,
+        "stage_history": [
+            {
+                "stage": "detecting",
+                "timestamp": now_iso,
+                "message": f"Incident detected on service '{service}'. Initiating telemetry analysis.",
+            }
+        ],
+        "logs": [f"[{now_iso}] Recovery job {job_id} queued for incident {incident_id}."],
+        "health_check_result": None,
+        "created_at": now_iso,
+        "updated_at": now_iso,
+        "completed_at": None,
+        "error": None,
+    }
+    recovery_jobs[job_id] = job
+    return job
+
+
+def get_recovery_job(job_id: str) -> dict[str, Any] | None:
+    """Retrieve a recovery job by its ID."""
+    return recovery_jobs.get(job_id)
+
+
+def get_jobs_for_incident(incident_id: str) -> list[dict[str, Any]]:
+    """Get all recovery jobs associated with an incident."""
+    return [job for job in recovery_jobs.values() if job.get("incident_id") == incident_id]
+
+
+def update_recovery_job(
+    job_id: str,
+    stage: str | None = None,
+    status: str | None = None,
+    current_step: str | None = None,
+    current_step_index: int | None = None,
+    action: str | None = None,
+    log_message: str | None = None,
+    health_check_result: dict[str, Any] | None = None,
+    evidence: dict[str, Any] | None = None,
+    root_cause: dict[str, Any] | None = None,
+    recovery_strategy: dict[str, Any] | None = None,
+    changeset_id: str | None = None,
+    error: str | None = None,
+    completed: bool = False,
+) -> dict[str, Any] | None:
+    """Update progress and stage of a recovery job."""
+    job = recovery_jobs.get(job_id)
+    if not job:
+        return None
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    if stage is not None:
+        if job.get("stage") != stage:
+            if "stage_history" not in job:
+                job["stage_history"] = []
+            job["stage_history"].append({
+                "stage": stage,
+                "timestamp": now_iso,
+                "message": log_message or f"Transitioned to stage: {stage}",
+            })
+        job["stage"] = stage
+    if status is not None:
+        job["status"] = status
+    if current_step is not None:
+        job["current_step"] = current_step
+    if current_step_index is not None:
+        job["current_step_index"] = current_step_index
+    if action is not None:
+        job["action"] = action
+    if health_check_result is not None:
+        job["health_check_result"] = health_check_result
+    if evidence is not None:
+        job["evidence"] = evidence
+    if root_cause is not None:
+        job["root_cause"] = root_cause
+    if recovery_strategy is not None:
+        job["recovery_strategy"] = recovery_strategy
+    if changeset_id is not None:
+        job["changeset_id"] = changeset_id
+    if error is not None:
+        job["error"] = error
+    if log_message:
+        job["logs"].append(f"[{now_iso}] {log_message}")
+    if completed:
+        job["completed_at"] = now_iso
+
+    job["updated_at"] = now_iso
+    return job
 
 
 

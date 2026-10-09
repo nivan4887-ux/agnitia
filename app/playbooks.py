@@ -1,5 +1,5 @@
 """
-RecoverOps – Simulated Recovery Playbooks and Risk Classification.
+BRIDGE – Simulated Recovery Playbooks and Risk Classification.
 """
 
 from __future__ import annotations
@@ -37,6 +37,12 @@ DEFAULT_PLAYBOOKS: dict[str, dict[str, Any]] = {
         "risk_level": "safe",
         "description": "Simulate purging frontend edge cache and restarting web ingress pods",
         "health_check_type": "synthetic_ui_probe",
+    },
+    "standalone_service": {
+        "action": "restart_python_demo_service",
+        "risk_level": "safe",
+        "description": "Restart independent Python OS process via supervisor and verify over real HTTP",
+        "health_check_type": "real_http_health_probe",
     },
 }
 
@@ -130,8 +136,8 @@ def run_simulated_health_check(service: str, playbook: dict[str, Any]) -> dict[s
             "message": f"Health check passed for {service} ({check_type})",
         }
 
-    # Live HTTP probe verification for backend_api demo service
-    if service == "backend_api":
+    # Live HTTP probe verification for designated demo services
+    if service in ("backend_api", "standalone_service"):
         return live_adapter.verify_live_service_health(service)
 
     return {

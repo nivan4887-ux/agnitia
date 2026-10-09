@@ -1,5 +1,5 @@
 """
-RecoverOps – Isolated Demo Store and Controlled Products API.
+BRIDGE – Isolated Demo Store and Controlled Products API.
 
 Provides real HTTP endpoints for a realistic fashion e-commerce website,
 supporting distinct fault injection scenarios (catalog DB exhaustion, timeout,

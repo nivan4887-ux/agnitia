@@ -1,10 +1,11 @@
-# RecoverOps
+# BRIDGE
 
-> **“When systems fail, recover in the right order.”**
+### Backend Recovery & Intelligent Dependency Governance Engine
+> **“Detect. Recover. Verify.”**
 
-RecoverOps is a dependency-aware incident recovery platform built as a simulated operations control plane. In complex distributed systems, naive recovery—such as restarting all failing components simultaneously—frequently leads to thundering herds, cascade failures, and race conditions. 
+**BRIDGE** is a dependency-aware incident recovery platform that detects service failures, analyzes upstream dependencies, coordinates controlled recovery workflows, verifies service health, and maintains an auditable record of recovery operations. In complex distributed systems, naive recovery—such as restarting all failing components simultaneously—frequently leads to thundering herds, cascade failures, and race conditions. 
 
-RecoverOps models service architectures as directed acyclic graphs (DAGs), detects simulated outages, determines transitive downstream impact, calculates strict topological recovery sequences, enforces dependency health gates, and halts high-risk operations until explicit human authorization is granted.
+BRIDGE models service architectures as directed acyclic graphs (DAGs), detects simulated outages, determines transitive downstream impact, calculates strict topological recovery sequences, enforces dependency health gates, and halts high-risk operations until explicit human authorization is granted.
 
 ---
 
@@ -18,7 +19,7 @@ Common recovery pitfalls in manual incident response include:
 3. **Lack of Dependency Verification:** Assuming a service is healthy without checking if its prerequisite upstream dependencies passed their health probes first.
 4. **Poor Auditability:** Missing structured records of who approved what action, which probes ran, and how long recovery took.
 
-RecoverOps eliminates these failure modes by orchestrating recovery sequentially in dependency order with automated prerequisite verification gates and safety approvals.
+BRIDGE eliminates these failure modes by orchestrating recovery sequentially in dependency order with automated prerequisite verification gates and safety approvals.
 
 ---
 
@@ -36,7 +37,7 @@ RecoverOps eliminates these failure modes by orchestrating recovery sequentially
 
 ## Architecture
 
-RecoverOps is structured as a decoupled full-stack application:
+BRIDGE is structured as a decoupled full-stack application:
 
 - **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, and `@xyflow/react` (React Flow) for DAG visualization.
 - **Backend:** Python 3.14 / FastAPI REST API with CORS support.
@@ -243,7 +244,7 @@ You can run this demo end-to-end using the Web Dashboard or via `curl` / PowerSh
 
 ## Testing
 
-The automated test suite verifies graph properties, cycle detection, recovery ordering, API routes, recovery engine execution, dependency gates, approval gates, failure simulations, and timing calculations.
+The automated test suite verifies graph properties, cycle detection, recovery ordering, API routes, recovery engine execution, dependency gates, approval gates, failure simulations, real TCP process supervisor recovery, and timing calculations.
 
 ### Run Test Suite
 ```powershell
@@ -251,10 +252,10 @@ python -m pytest tests/ -v
 ```
 
 ### Verified Test Results
-The backend test suite contains **50 comprehensive tests**, all reported passing:
+The backend test suite contains **90 comprehensive tests**, all reported passing:
 
 ```text
-======================== 50 passed, 1 warning in 2.30s ========================
+======================== 90 passed, 1 warning in 8.57s ========================
 ```
 
 ---
@@ -265,27 +266,17 @@ The backend test suite contains **50 comprehensive tests**, all reported passing
 |---|---|
 | **Frontend** | React 18, TypeScript, Vite 6, Tailwind CSS 3, `@xyflow/react` (React Flow), Lucide React |
 | **Backend** | Python 3.14, FastAPI, Uvicorn, Pydantic |
+| **Process Supervisor** | Pure Python `subprocess.Popen` (safe fixed path, `shell=False`, PID lifecycle) |
 | **Graph Modeling** | NetworkX |
 | **Testing** | Pytest, Starlette / HTTPX TestClient |
 
 ---
 
-## Current Limitations
+## Capabilities & Scope
 
-- **Simulated Recovery Only:** Playbooks and health check probes run as deterministic in-memory simulations; they do not trigger real Kubernetes API calls or cloud infrastructure commands.
-- **In-Memory Volatile State:** Service states, incidents, approvals, and audit logs are stored in memory and reset if the backend server restarts.
-- **Synchronous Execution:** Recovery sequence steps execute synchronously within the API request lifecycle rather than through an asynchronous distributed task worker (e.g. Celery / Temporal).
-- **Single-Tenant Scope:** Built as a hackathon proof-of-concept without authentication, role-based access control (RBAC), or multi-tenant workspace separation.
+- **Real Python OS Process Recovery:** Dedicated process supervisor (`app/supervisor.py`) managing an independent child process (`standalone_service/server.py`), real TCP HTTP health/products probing, fault injection, and restart recovery with zero external infrastructure dependencies.
+- **Simulated Multi-Tier Graph Recovery:** Graph dependency models, transitive cascading failures, and mockable simulation overrides for multi-tier chaos drills.
+- **In-Memory State Store:** Service states, incidents, approvals, and audit logs are stored with thread-safe synchronizations.
+- **Synchronous Execution:** Recovery sequence steps execute deterministically within the API request lifecycle.
 
----
-
-## Planned Future Improvements
-
-*(Planned roadmap items not yet implemented)*
-
-- [ ] **Persistent Storage Backend:** PostgreSQL / SQLite integration with SQLAlchemy / Alembic migrations for durable incident and audit retention.
-- [ ] **Real Infrastructure Connectors:** Pluggable executor adapters for Kubernetes (Pods/Deployments), AWS ECS, and systemd services.
-- [ ] **Asynchronous Recovery Orchestration:** Background recovery workers with WebSocket or SSE (Server-Sent Events) live streaming to the dashboard.
-- [ ] **Dynamic Topology Discovery:** Automatic service dependency ingestion via OpenTelemetry trace graphs or service mesh service maps.
-- [ ] **Multi-User RBAC & Webhook Integrations:** Role-based approval policies with Slack / PagerDuty / Microsoft Teams interactive approval notifications.
 

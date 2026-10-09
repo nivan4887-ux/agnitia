@@ -8,14 +8,17 @@ import {
   Loader2,
   CheckCircle2,
   ShieldCheck,
+  FileCode,
 } from 'lucide-react';
 import { Incident, RecoveryAssessment } from '../types';
+import { LiveRecoveryConsole } from './LiveRecoveryConsole';
 
 interface CurrentIncidentCardProps {
   incident?: Incident | null;
   assessment?: RecoveryAssessment | null;
   onExecuteRecovery: (incidentId: string) => void;
   onViewDetails?: () => void;
+  onReviewCodePatch?: (incidentId: string) => void;
   isExecuting?: boolean;
 }
 
@@ -24,6 +27,7 @@ export const CurrentIncidentCard: React.FC<CurrentIncidentCardProps> = ({
   assessment,
   onExecuteRecovery,
   onViewDetails,
+  onReviewCodePatch,
   isExecuting = false,
 }) => {
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(true);
@@ -282,14 +286,35 @@ export const CurrentIncidentCard: React.FC<CurrentIncidentCardProps> = ({
                   className="flex items-center justify-center space-x-1.5 py-2.5 rounded-xl bg-white hover:bg-stone-50 border border-[#E7E2D9] text-stone-700 text-xs font-semibold shadow-xs transition cursor-pointer"
                 >
                   <Eye className="w-3.5 h-3.5 text-stone-500" />
-                  <span>View Details</span>
+                  <span>View Plan</span>
                 </button>
               )}
             </div>
+
+            {onReviewCodePatch && incident && (
+              <button
+                onClick={() => onReviewCodePatch(incident.id)}
+                className="w-full flex items-center justify-center space-x-2 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-zinc-100 text-xs font-mono font-semibold transition cursor-pointer shadow-xs border border-stone-800"
+              >
+                <FileCode className="w-3.5 h-3.5 text-[#D95A1E]" />
+                <span>Review Proposed Source Patch (10s Diff Preview)</span>
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Live AI Recovery Orchestration Console */}
+      {(incident.status === 'recovering' || incident.status === 'awaiting_approval' || isExecuting) && (
+        <div className="pt-2">
+          <LiveRecoveryConsole
+            incident={incident}
+            onOpenCodeReview={onReviewCodePatch}
+          />
+        </div>
+      )}
     </div>
   );
 };
+
 
