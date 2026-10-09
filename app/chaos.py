@@ -132,6 +132,20 @@ CHAOS_SCENARIOS: dict[str, dict[str, Any]] = {
         "verification_endpoints": ["/services"],
         "dependency_impact": ["backend_api", "order_service", "payment_service", "website"],
     },
+    "scenario_i_malformed_data": {
+        "id": "scenario_i_malformed_data",
+        "scenario_letter": "I",
+        "name": "Scenario I — Malformed Ingestion & Dead-Letter Quarantine",
+        "description": "Simulates invalid record entering the database (negative price -$450, schema breach). Gate detects and quarantines it; valid records remain 100% intact.",
+        "target_service": "database",
+        "failure_type": "data_corruption_attempt",
+        "expected_status": 422,
+        "error_code": "ERR_DATA_INTEGRITY_VIOLATION",
+        "user_effect": "Malformed record safely isolated in Quarantine Vault. Database maintains 0% contamination.",
+        "required_action": "sanitize_and_recover_record",
+        "verification_endpoints": ["/integrity/status"],
+        "dependency_impact": [],
+    },
 }
 
 # Current Chaos State
@@ -187,6 +201,9 @@ def activate_scenario(scenario_id: str) -> dict[str, Any]:
             demo_store.set_demo_state(is_healthy=True)  # catalog itself is fine, but db is down
             with state.state_lock:
                 state.fail_service("database")
+        elif scenario_id == "scenario_i_malformed_data":
+            from app import data_integrity
+            data_integrity.inject_malformed_record(scenario="negative_price")
 
         # 2. For scenario G (verification failure), configure simulation override
         if scenario_id == "scenario_g_verification_failure":
@@ -203,7 +220,7 @@ def activate_scenario(scenario_id: str) -> dict[str, Any]:
 
 def reset_chaos_state() -> None:
     """Reset all chaos scenarios and restore demo services to healthy baseline."""
-    from app import state, demo_store
+    from app import state, demo_store, data_integrity
 
     with _chaos_lock:
         global _active_scenario, _scenario_metadata
@@ -214,5 +231,6 @@ def reset_chaos_state() -> None:
         demo_store.set_inventory_healthy(True)
         demo_store.set_checkout_healthy(True)
         demo_store.set_payment_healthy(True)
+        data_integrity.reset_integrity_store()
         state.simulation_overrides.clear()
 

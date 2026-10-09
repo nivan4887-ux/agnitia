@@ -19,6 +19,7 @@ import type {
   ServiceHealth,
   SOSRequest,
   SOSResponse,
+  DataIntegrityStatusResponse,
 } from '../types';
 
 const getApiBaseUrl = (): string => {
@@ -411,6 +412,49 @@ export const api = {
     return fetchJson(`${API_BASE_URL}/incidents/sos`, {
       method: 'POST',
       body: JSON.stringify(payload),
+    });
+  },
+
+  // Data Integrity & Quarantine Gate APIs
+  getIntegrityStatus: async (): Promise<DataIntegrityStatusResponse> => {
+    return fetchJson(`${API_BASE_URL}/integrity/status`);
+  },
+
+  injectMalformedRecord: async (scenario: string = 'negative_price'): Promise<any> => {
+    return fetchJson(`${API_BASE_URL}/integrity/inject-malformed?scenario=${encodeURIComponent(scenario)}`, {
+      method: 'POST',
+    });
+  },
+
+  ingestRecord: async (payload: {
+    item_name: string;
+    customer_email: string;
+    amount: number | string;
+    quantity: number;
+    currency?: string;
+  }): Promise<any> => {
+    return fetchJson(`${API_BASE_URL}/integrity/ingest`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  recoverQuarantinedRecord: async (quarantineId: string, repairedPayload?: any): Promise<any> => {
+    return fetchJson(`${API_BASE_URL}/integrity/quarantine/${encodeURIComponent(quarantineId)}/recover`, {
+      method: 'POST',
+      body: JSON.stringify({ repaired_payload: repairedPayload }),
+    });
+  },
+
+  purgeQuarantinedRecord: async (quarantineId: string): Promise<any> => {
+    return fetchJson(`${API_BASE_URL}/integrity/quarantine/${encodeURIComponent(quarantineId)}`, {
+      method: 'DELETE',
+    });
+  },
+
+  resetIntegrityStore: async (): Promise<any> => {
+    return fetchJson(`${API_BASE_URL}/integrity/reset`, {
+      method: 'POST',
     });
   },
 };

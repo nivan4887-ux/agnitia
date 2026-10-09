@@ -328,4 +328,54 @@ export interface SOSResponse {
   duplicate?: boolean;
 }
 
+export interface ValidOrderRecord {
+  id: string;
+  item_name: string;
+  customer_email: string;
+  amount: number;
+  quantity: number;
+  currency: string;
+  status: string;
+  checksum: string;
+  created_at?: string;
+  accepted_at?: string;
+  integrity_verified: boolean;
+  recovered_from_quarantine?: string;
+}
+
+export interface QuarantinedOrderRecord {
+  id: string;
+  target_record_id: string;
+  raw_payload: Record<string, any>;
+  violations: string[];
+  source: string;
+  status: 'quarantined' | 'recovered_and_promoted' | 'purged';
+  quarantined_at: string;
+  recovered_at?: string;
+  purged_at?: string;
+  suggested_fix?: {
+    repairable: boolean;
+    recommended_payload: Record<string, any>;
+    actions: string[];
+  };
+}
+
+export interface DataIntegrityStatusResponse {
+  database_status: string;
+  contamination_rate_percent: number;
+  valid_records_count: number;
+  quarantined_records_count: number;
+  recovered_records_count: number;
+  purged_records_count: number;
+  stats: {
+    total_ingested: number;
+    valid_accepted: number;
+    malformed_blocked: number;
+    recovered_count: number;
+    last_violation_at: string | null;
+  };
+  valid_records: ValidOrderRecord[];
+  quarantined_records: QuarantinedOrderRecord[];
+}
+
 

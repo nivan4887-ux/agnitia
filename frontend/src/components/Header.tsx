@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   Store,
   FileCode,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -46,6 +47,7 @@ export const Header: React.FC<HeaderProps> = ({
       badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
     },
     { id: 'engine', label: 'Recovery Engine', icon: Flame },
+    { id: 'integrity', label: 'Data Integrity', icon: ShieldCheck },
     { id: 'code_review', label: 'Code Review', icon: FileCode },
     { id: 'graph', label: 'Dependency Graph', icon: Network },
     { id: 'audit', label: 'Audit Log', icon: ClipboardList },

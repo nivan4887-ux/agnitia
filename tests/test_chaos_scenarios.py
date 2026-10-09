@@ -31,7 +31,7 @@ class TestMultiScenarioChaos:
         data = res.json()
         assert data["status"] == "ok"
         scenarios = data["scenarios"]
-        assert len(scenarios) == 8
+        assert len(scenarios) == 9
 
         scenario_ids = [s["id"] for s in scenarios]
         assert "scenario_a_catalog_db" in scenario_ids
@@ -42,6 +42,7 @@ class TestMultiScenarioChaos:
         assert "scenario_f_backend_api_down" in scenario_ids
         assert "scenario_g_verification_failure" in scenario_ids
         assert "scenario_h_upstream_dependency_failure" in scenario_ids
+        assert "scenario_i_malformed_data" in scenario_ids
 
     def test_unknown_scenario_rejected(self):
         """Injecting an unregistered scenario ID returns HTTP 400 Bad Request."""

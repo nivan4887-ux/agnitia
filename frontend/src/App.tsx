@@ -29,6 +29,7 @@ import { CodeReviewView } from './components/CodeReviewView';
 import { CodeChangeReviewModal } from './components/CodeChangeReviewModal';
 import { SOSTriggerModal } from './components/SOSTriggerModal';
 import { EmergencyAlarmBanner } from './components/EmergencyAlarmBanner';
+import { DataIntegrityView } from './components/DataIntegrityView';
 import { AlertTriangle, XCircle, CheckCircle2, AlertOctagon } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -312,6 +313,8 @@ export const App: React.FC = () => {
               onError={showError}
               onSuccess={showSuccess}
             />
+          ) : activeNav === 'integrity' ? (
+            <DataIntegrityView />
           ) : activeNav === 'graph' ? (
             <DependencyGraphView
               dependencies={dependencies}

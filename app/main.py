@@ -13,7 +13,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from app import build_monitor, code_changes, db, demo_store, engine, graph, live_adapter, notifications, risk_gate, sos, state, supervisor
+from app import build_monitor, code_changes, data_integrity, db, demo_store, engine, graph, live_adapter, notifications, risk_gate, sos, state, supervisor
 
 
 @asynccontextmanager
@@ -601,6 +601,68 @@ def apply_changeset_endpoint(changeset_id: str):
         raise HTTPException(status_code=409, detail=str(re))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to apply change set: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# Data Integrity Gate & Dead-Letter Quarantine Endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/integrity/status")
+def get_integrity_status_endpoint():
+    """Return status of Primary DB (intact valid records) vs Quarantine Vault."""
+    return data_integrity.get_integrity_status()
+
+
+class IngestRecordRequest(BaseModel):
+    item_name: str
+    customer_email: str
+    amount: Any
+    quantity: Any
+    currency: Optional[str] = "USD"
+    id: Optional[str] = None
+
+
+@app.post("/integrity/ingest")
+def ingest_record_endpoint(body: IngestRecordRequest):
+    """Ingest a record through the Data Integrity Gate."""
+    payload = body.model_dump()
+    result = data_integrity.ingest_record(payload)
+    return result
+
+
+@app.post("/integrity/inject-malformed")
+def inject_malformed_endpoint(scenario: str = Query("negative_price", description="Type of corruption")):
+    """Inject a deliberately malformed record to demonstrate automatic quarantine."""
+    return data_integrity.inject_malformed_record(scenario=scenario)
+
+
+class RecoverRecordRequest(BaseModel):
+    repaired_payload: Optional[dict[str, Any]] = None
+
+
+@app.post("/integrity/quarantine/{quarantine_id}/recover")
+def recover_quarantined_endpoint(quarantine_id: str, body: Optional[RecoverRecordRequest] = None):
+    """Safely sanitize, re-validate, and promote a quarantined record to the primary database."""
+    repaired = body.repaired_payload if body else None
+    res = data_integrity.recover_quarantined_record(quarantine_id=quarantine_id, repaired_payload=repaired)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "Failed to recover record"))
+    return res
+
+
+@app.delete("/integrity/quarantine/{quarantine_id}")
+def purge_quarantined_endpoint(quarantine_id: str):
+    """Purge a toxic/corrupt record from quarantine vault."""
+    res = data_integrity.purge_quarantined_record(quarantine_id=quarantine_id)
+    if not res.get("success"):
+        raise HTTPException(status_code=404, detail=res.get("error", "Not found"))
+    return res
+
+
+@app.post("/integrity/reset")
+def reset_integrity_endpoint():
+    """Reset data integrity stores to clean baseline for demonstrations."""
+    return data_integrity.reset_integrity_store()
 
 
 
