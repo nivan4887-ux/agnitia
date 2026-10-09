@@ -6,7 +6,6 @@ import {
   Flame,
   Network,
   ClipboardList,
-  Settings,
   RefreshCw,
   LayoutGrid,
   Store,
@@ -60,7 +59,6 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'engine', label: 'Recovery Engine', icon: Flame },
     { id: 'graph', label: 'Dependency Graph', icon: Network },
     { id: 'audit', label: 'Audit Log', icon: ClipboardList },
-    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (

@@ -24,7 +24,6 @@ import { IncidentsView } from './components/IncidentsView';
 import { RecoveryEngineView } from './components/RecoveryEngineView';
 import { DependencyGraphView } from './components/DependencyGraphView';
 import { AuditLogView } from './components/AuditLogView';
-import { SettingsView } from './components/SettingsView';
 import { AlertTriangle, XCircle, CheckCircle2 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -293,12 +292,6 @@ export const App: React.FC = () => {
             <AuditLogView
               auditEvents={auditEvents}
               onRefresh={() => fetchData()}
-            />
-          ) : activeNav === 'settings' ? (
-            <SettingsView
-              backendOnline={backendOnline}
-              onRefresh={() => fetchData()}
-              onError={showError}
             />
           ) : (
             /* Default: Overview View */

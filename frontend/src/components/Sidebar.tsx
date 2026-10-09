@@ -5,7 +5,6 @@ import {
   Flame,
   Network,
   ClipboardList,
-  Settings,
   Shield,
   Tent,
 } from 'lucide-react';
@@ -32,7 +31,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'engine', label: 'Recovery Engine', icon: Flame },
     { id: 'graph', label: 'Dependency Graph', icon: Network },
     { id: 'audit', label: 'Audit Log', icon: ClipboardList },
-    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
