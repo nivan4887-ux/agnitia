@@ -307,7 +307,7 @@ export const App: React.FC = () => {
               isExecuting={isExecutingRecovery}
             />
           ) : activeNav === 'integrity' ? (
-            <DataIntegrityView />
+            <DataIntegrityView onRefresh={() => fetchData()} />
           ) : activeNav === 'graph' ? (
             <DependencyGraphView
               dependencies={dependencies}

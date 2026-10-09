@@ -138,11 +138,13 @@ def validate_order_record(payload: Dict[str, Any]) -> Tuple[bool, List[str]]:
 def ingest_record(
     payload: Dict[str, Any],
     source: str = "api_gateway",
+    auto_trigger_sos: bool = True,
 ) -> Dict[str, Any]:
     """Ingest an incoming record through the Data Integrity Gate.
     
     If valid: stored into primary collection.
-    If malformed: routed to Dead-Letter Quarantine Store with full diagnostics.
+    If malformed: routed to Dead-Letter Quarantine Store with full diagnostics,
+    and automatically triggers an emergency SOS incident (siren, voice call, Telegram).
     """
     with _lock:
         _integrity_stats["total_ingested"] += 1
@@ -209,6 +211,30 @@ def ingest_record(
             },
         )
 
+        # Trigger Emergency SOS incident (Siren, Automated Twilio Emergency Call, Telegram Alert)
+        sos_incident_id = None
+        if auto_trigger_sos:
+            try:
+                from app import sos
+                violation_summary = "; ".join(violations[:2])
+                reason = f"Data integrity violation quarantined [{quarantine_id}]: {violation_summary}"
+                sos_res = sos.dispatch_sos_incident(
+                    service="database",
+                    reason=reason,
+                    reporter="data_integrity_gate",
+                    failure_type="database_corruption_attempt",
+                    metadata={
+                        "quarantine_id": quarantine_id,
+                        "target_record_id": record_id,
+                        "violations": violations,
+                    },
+                    auto_trigger_recovery=False,  # High-risk database: requires inspection or Sanitize & Recover
+                )
+                sos_incident_id = sos_res.get("incident_id")
+                quarantined_entry["incident_id"] = sos_incident_id
+            except Exception as sos_err:
+                logger.warning("Automated SOS dispatch on data integrity breach failed: %s", sos_err)
+
         # Sync to Mongo quarantined collection if connected
         db_conn = db.get_database()
         if db_conn is not None:
@@ -236,6 +262,8 @@ def ingest_record(
             "quarantined": True,
             "error_code": "ERR_DATA_INTEGRITY_VIOLATION",
             "suggested_fix": quarantined_entry["suggested_fix"],
+            "sos_triggered": bool(sos_incident_id),
+            "incident_id": sos_incident_id,
         }
 
 
@@ -243,33 +271,87 @@ def _generate_suggested_fix(payload: Dict[str, Any], violations: List[str]) -> D
     """Generate automatic schema repair recommendations."""
     sanitized = copy.deepcopy(payload)
 
-    # Auto fix negative price
-    amount = sanitized.get("amount")
-    if isinstance(amount, (int, float)) and amount <= 0:
-        sanitized["amount"] = abs(amount) if amount != 0 else 99.00
+    # 1. Auto-sanitize XSS / Script tags and injection vectors from all string fields
+    for k, v in list(sanitized.items()):
+        if isinstance(v, str):
+            cleaned = re.sub(r"<\s*script[^>]*>.*?<\s*/\s*script\s*>", "", v, flags=re.IGNORECASE | re.DOTALL)
+            cleaned = re.sub(r"<\s*script[^>]*>", "", cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(r"javascript:", "", cleaned, flags=re.IGNORECASE)
+            cleaned = cleaned.replace("$where", "").replace('{"$gt"', "")
+            cleaned = cleaned.strip()
+            sanitized[k] = cleaned
 
-    # Auto fix missing or invalid email
+    # 2. Auto fix item_name
+    item_name = sanitized.get("item_name")
+    if not item_name or not isinstance(item_name, str) or not item_name.strip():
+        sanitized["item_name"] = "Recovered Item (Sanitized)"
+
+    # 3. Auto fix monetary amount
+    amount = sanitized.get("amount")
+    if isinstance(amount, (int, float)):
+        if amount <= 0:
+            sanitized["amount"] = abs(amount) if amount != 0 else 99.00
+        elif amount > 50000:
+            sanitized["amount"] = 500.00
+    elif isinstance(amount, str):
+        try:
+            val = float(amount.replace("$", "").replace(",", "").strip())
+            sanitized["amount"] = abs(val) if val != 0 else 99.00
+        except (ValueError, TypeError):
+            sanitized["amount"] = 99.00
+    else:
+        sanitized["amount"] = 99.00
+
+    # 4. Auto fix customer email
     email = sanitized.get("customer_email")
-    if not email or "@" not in str(email):
+    if not email or not isinstance(email, str) or "@" not in email or "." not in email:
         sanitized["customer_email"] = "recovered.customer@example.com"
 
-    # Auto fix quantity
+    # 5. Auto fix quantity
     qty = sanitized.get("quantity")
-    if not isinstance(qty, int) or qty <= 0:
+    if not isinstance(qty, int) or isinstance(qty, bool) or qty <= 0:
         sanitized["quantity"] = 1
 
-    # Auto fix currency
+    # 6. Auto fix currency
     if sanitized.get("currency") not in ("USD", "EUR", "GBP", "INR", "JPY", "CAD"):
         sanitized["currency"] = "USD"
-
-    if not sanitized.get("item_name"):
-        sanitized["item_name"] = "Recovered Item"
 
     return {
         "repairable": True,
         "recommended_payload": sanitized,
         "actions": [f"Fix: {v}" for v in violations],
     }
+
+
+def _resolve_database_incident(notes: str = "Database corruption resolved") -> None:
+    """Helper to mark active database incident resolved and restore healthy service state."""
+    try:
+        from app import sos, state
+        active_inc = sos.get_active_incident_for_service("database")
+        if active_inc:
+            inc_id = active_inc.get("id")
+            now_iso = _now_iso()
+            active_inc["status"] = "resolved"
+            active_inc["recovery_completed_at"] = now_iso
+            state.save_incident(active_inc)
+
+            with state.state_lock:
+                state.service_states["database"] = "healthy"
+                state.save_service_states(state.service_states)
+
+            state.record_audit_event(
+                incident_id=inc_id,
+                event_type="database_corruption_recovered",
+                service="database",
+                details={
+                    "incident_id": inc_id,
+                    "resolved_at": now_iso,
+                    "notes": notes,
+                },
+            )
+            logger.info("Database corruption incident %s resolved: %s", inc_id, notes)
+    except Exception as exc:
+        logger.warning("Failed to auto-resolve database incident: %s", exc)
 
 
 def recover_quarantined_record(
@@ -289,7 +371,14 @@ def recover_quarantined_record(
                 "error": f"Quarantine record '{quarantine_id}' not found",
             }
 
-        payload_to_test = repaired_payload or entry.get("suggested_fix", {}).get("recommended_payload")
+        # If explicit repaired payload passed, use it; otherwise compute freshly sanitized payload
+        if repaired_payload:
+            payload_to_test = repaired_payload
+        else:
+            raw_p = entry.get("raw_payload") or entry.get("payload") or {}
+            fix = _generate_suggested_fix(raw_p, entry.get("violations", []))
+            payload_to_test = fix.get("recommended_payload")
+
         if not payload_to_test:
             return {
                 "success": False,
@@ -321,6 +410,13 @@ def recover_quarantined_record(
 
         _integrity_stats["valid_accepted"] += 1
         _integrity_stats["recovered_count"] += 1
+
+        # Check if all active quarantined items are recovered. If so, automatically resolve active database incident (stopping siren)
+        active_remaining = [q for q in _quarantined_records.values() if q.get("status") == "quarantined"]
+        if not active_remaining:
+            _resolve_database_incident(
+                f"Quarantined record '{quarantine_id}' sanitized and safely promoted to primary database as '{target_id}'. All corruption threats resolved."
+            )
 
         # Record SRE Audit Event
         state.record_audit_event(
@@ -360,6 +456,11 @@ def purge_quarantined_record(quarantine_id: str) -> Dict[str, Any]:
         entry["status"] = "purged"
         entry["purged_at"] = _now_iso()
 
+        # Check if all active quarantined items are resolved. If so, resolve database incident
+        active_remaining = [q for q in _quarantined_records.values() if q.get("status") == "quarantined"]
+        if not active_remaining:
+            _resolve_database_incident(f"Quarantined toxic payload '{quarantine_id}' purged. All active corruption threats cleared.")
+
         # Sync to MongoDB if connected
         db_conn = db.get_database()
         if db_conn is not None:
@@ -377,7 +478,10 @@ def purge_quarantined_record(quarantine_id: str) -> Dict[str, Any]:
         return {"success": True, "message": f"Quarantine record '{quarantine_id}' purged successfully."}
 
 
-def inject_malformed_record(scenario: str = "negative_price") -> Dict[str, Any]:
+def inject_malformed_record(
+    scenario: str = "negative_price",
+    auto_trigger_sos: bool = True,
+) -> Dict[str, Any]:
     """Helper to inject a realistic malformed record for live demonstration."""
     if scenario == "negative_price":
         payload = {
@@ -416,7 +520,7 @@ def inject_malformed_record(scenario: str = "negative_price") -> Dict[str, Any]:
             "currency": "FAKE",
         }
 
-    return ingest_record(payload, source=f"demo_injection_{scenario}")
+    return ingest_record(payload, source=f"demo_injection_{scenario}", auto_trigger_sos=auto_trigger_sos)
 
 
 def get_integrity_status() -> Dict[str, Any]:
@@ -454,4 +558,7 @@ def reset_integrity_store() -> Dict[str, Any]:
             "recovered_count": 0,
             "last_violation_at": None,
         }
+        # Auto-resolve database incident if one is active
+        _resolve_database_incident("Data integrity store reset to clean baseline. Database health restored.")
+
         return {"success": True, "message": "Data integrity stores reset to clean baseline."}

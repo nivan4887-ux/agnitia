@@ -15,7 +15,11 @@ import {
 import { api } from '../services/api';
 import type { DataIntegrityStatusResponse } from '../types';
 
-export const DataIntegrityView: React.FC = () => {
+interface DataIntegrityViewProps {
+  onRefresh?: () => void;
+}
+
+export const DataIntegrityView: React.FC<DataIntegrityViewProps> = ({ onRefresh }) => {
   const [data, setData] = useState<DataIntegrityStatusResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
@@ -48,10 +52,13 @@ export const DataIntegrityView: React.FC = () => {
     try {
       const res = await api.injectMalformedRecord(scenario);
       showToast(
-        'info',
-        `Intercepted & Quarantined: ${label}. Caught ${res.violations?.length || 1} violations. Valid records remain intact.`
+        'error',
+        `🚨 P1 Emergency SOS Triggered! Audible Siren & Voice Call dispatched. Intercepted & Quarantined [${res.quarantine_id}]: ${label}.`
       );
       await fetchStatus();
+      if (onRefresh) {
+        await onRefresh();
+      }
     } catch (err: any) {
       showToast('error', `Failed to inject: ${err.message}`);
     } finally {
@@ -78,6 +85,9 @@ export const DataIntegrityView: React.FC = () => {
         showToast('success', `Valid Record Ingested: "${randomName}" ($${randomAmount}) verified & stored.`);
       }
       await fetchStatus();
+      if (onRefresh) {
+        await onRefresh();
+      }
     } catch (err: any) {
       showToast('error', `Ingestion failed: ${err.message}`);
     } finally {
@@ -90,9 +100,12 @@ export const DataIntegrityView: React.FC = () => {
     try {
       const res = await api.recoverQuarantinedRecord(quarantineId);
       if (res.success) {
-        showToast('success', res.message);
+        showToast('success', `✅ Recovered & Promoted! ${res.message}. Emergency Siren cleared.`);
       }
       await fetchStatus();
+      if (onRefresh) {
+        await onRefresh();
+      }
     } catch (err: any) {
       showToast('error', `Recovery failed: ${err.message}`);
     } finally {
@@ -106,6 +119,9 @@ export const DataIntegrityView: React.FC = () => {
       await api.purgeQuarantinedRecord(quarantineId);
       showToast('info', `Quarantined payload ${quarantineId} purged safely.`);
       await fetchStatus();
+      if (onRefresh) {
+        await onRefresh();
+      }
     } catch (err: any) {
       showToast('error', `Purge failed: ${err.message}`);
     } finally {
@@ -117,8 +133,11 @@ export const DataIntegrityView: React.FC = () => {
     setIsProcessing(true);
     try {
       await api.resetIntegrityStore();
-      showToast('success', 'Reset completed: baseline valid records restored, quarantine cleared.');
+      showToast('success', 'Reset completed: baseline valid records restored, quarantine cleared, emergency siren reset.');
       await fetchStatus();
+      if (onRefresh) {
+        await onRefresh();
+      }
     } catch (err: any) {
       showToast('error', `Reset failed: ${err.message}`);
     } finally {
@@ -254,9 +273,9 @@ export const DataIntegrityView: React.FC = () => {
 
       {/* Demonstration Action Toolbar */}
       <div className="bg-[#1C130D] border border-[#2C1E16] rounded-xl p-4">
-        <div className="text-xs font-semibold text-stone-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+        <div className="text-xs font-semibold text-stone-300 uppercase tracking-wider mb-3 flex flex-wrap items-center gap-2">
           <span>Demonstration Actions</span>
-          <span className="text-stone-500 normal-case font-normal">(Click to test live ingestion gate)</span>
+          <span className="text-stone-400 normal-case font-normal">• Intercepts corruption & triggers emergency siren + voice call</span>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
           <button
@@ -277,6 +296,7 @@ export const DataIntegrityView: React.FC = () => {
           >
             <Bug className="w-4 h-4 text-red-400" />
             💥 Inject Malformed: Negative Price (-$450.00)
+            <span className="ml-1 text-[9px] bg-red-500/20 text-red-300 px-1 py-0.2 rounded font-mono border border-red-500/30">SIREN + CALL</span>
           </button>
 
           <button
@@ -286,6 +306,7 @@ export const DataIntegrityView: React.FC = () => {
           >
             <AlertTriangle className="w-4 h-4 text-amber-400" />
             ⚠️ Inject Malformed: Schema & Currency Breach
+            <span className="ml-1 text-[9px] bg-amber-500/20 text-amber-300 px-1 py-0.2 rounded font-mono border border-amber-500/30">SIREN + CALL</span>
           </button>
 
           <button
@@ -295,6 +316,7 @@ export const DataIntegrityView: React.FC = () => {
           >
             <ShieldCheck className="w-4 h-4 text-purple-400" />
             🛡️ Inject Malformed: Script Payload Attack
+            <span className="ml-1 text-[9px] bg-purple-500/20 text-purple-300 px-1 py-0.2 rounded font-mono border border-purple-500/30">SIREN + CALL</span>
           </button>
         </div>
       </div>

@@ -421,7 +421,7 @@ export const api = {
   },
 
   injectMalformedRecord: async (scenario: string = 'negative_price'): Promise<any> => {
-    return fetchJson(`${API_BASE_URL}/integrity/inject-malformed?scenario=${encodeURIComponent(scenario)}`, {
+    return fetchJson(`${API_BASE_URL}/integrity/inject-malformed?scenario=${encodeURIComponent(scenario)}&auto_trigger_sos=true`, {
       method: 'POST',
     });
   },

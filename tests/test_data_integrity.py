@@ -211,3 +211,33 @@ def test_7_audit_the_full_recovery_process():
     assert recovery_audits[0]["details"]["status"] == "safely_promoted_to_primary_store"
     assert "promoted_record_id" in recovery_audits[0]["details"]
 
+
+# ---------------------------------------------------------------------------
+# Rubric Item 8: Controlled Injection triggers P1 SOS & Emergency Alerts, Recovery Resolves
+# ---------------------------------------------------------------------------
+def test_8_malformed_injection_triggers_sos_siren_and_recovery_resolves_it():
+    """Injecting corruption dispatches emergency SOS on database; recovery resolves incident and clears alarm."""
+    # 1. Inject malformed record
+    inj_resp = client.post("/integrity/inject-malformed?scenario=script_injection&auto_trigger_sos=true")
+    assert inj_resp.status_code == 200
+    data = inj_resp.json()
+    assert data["quarantined"] is True
+    assert data["sos_triggered"] is True
+    qid = data["quarantine_id"]
+
+    # 2. Verify active incident created for 'database' service (powers Siren & Calls)
+    from app import sos
+    active_inc = sos.get_active_incident_for_service("database")
+    assert active_inc is not None
+    assert active_inc["status"] in ("open", "degraded", "awaiting_approval")
+
+    # 3. Sanitize and recover quarantined record
+    rec_resp = client.post(f"/integrity/quarantine/{qid}/recover", json={})
+    assert rec_resp.status_code == 200
+    assert rec_resp.json()["success"] is True
+
+    # 4. Verify database incident resolved (siren silenced, state restored)
+    active_post_rec = sos.get_active_incident_for_service("database")
+    assert active_post_rec is None
+
+

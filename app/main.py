@@ -672,9 +672,12 @@ def ingest_record_endpoint(body: IngestRecordRequest):
 
 
 @app.post("/integrity/inject-malformed")
-def inject_malformed_endpoint(scenario: str = Query("negative_price", description="Type of corruption")):
-    """Inject a deliberately malformed record to demonstrate automatic quarantine."""
-    return data_integrity.inject_malformed_record(scenario=scenario)
+def inject_malformed_endpoint(
+    scenario: str = Query("negative_price", description="Type of corruption"),
+    auto_trigger_sos: bool = Query(True, description="Automatically trigger SOS incident, siren, and emergency call"),
+):
+    """Inject a deliberately malformed record to demonstrate automatic quarantine, siren, and emergency alerting."""
+    return data_integrity.inject_malformed_record(scenario=scenario, auto_trigger_sos=auto_trigger_sos)
 
 
 class RecoverRecordRequest(BaseModel):
