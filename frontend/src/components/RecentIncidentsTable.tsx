@@ -74,11 +74,11 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({
   };
 
   return (
-    <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4">
+    <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <h3 className="text-sm font-bold text-stone-900">Recent Incidents</h3>
+          <h3 className="text-sm font-semibold text-stone-900 tracking-tight">Recent Incidents</h3>
           <span className="text-[11px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
             {incidents.length}
           </span>
@@ -86,7 +86,7 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({
         {onViewAll && (
           <button
             onClick={onViewAll}
-            className="text-xs font-semibold text-[#D95A1E] hover:underline cursor-pointer"
+            className="text-xs font-medium text-stone-500 hover:text-stone-900 transition cursor-pointer"
           >
             View All
           </button>
@@ -95,8 +95,8 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({
 
       {/* Table or Empty State */}
       {incidents.length === 0 ? (
-        <div className="py-8 text-center text-stone-500 flex flex-col items-center justify-center space-y-2 border border-dashed border-[#E7E2D9] rounded-xl bg-stone-50/50">
-          <CheckCircle2 className="w-7 h-7 text-[#2E7D32]" />
+        <div className="py-7 text-center text-stone-500 flex flex-col items-center justify-center space-y-2 rounded-lg bg-stone-50/70 border border-stone-200/60">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
           <p className="text-xs font-semibold text-stone-800">No active incidents</p>
           <p className="text-[11px] text-stone-500">
             All system services are operating within normal SLO parameters.
@@ -106,7 +106,7 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs font-mono">
             <thead>
-              <tr className="text-stone-400 text-[11px] border-b border-[#EFEAE2] pb-2">
+              <tr className="text-stone-400 text-[11px] border-b border-stone-200/80 pb-2">
                 <th className="font-semibold py-2">ID</th>
                 <th className="font-semibold py-2">Root Service</th>
                 <th className="font-semibold py-2">Status</th>
@@ -116,7 +116,7 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({
                 <th className="font-semibold py-2 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F5F2EC]">
+            <tbody className="divide-y divide-stone-100">
               {incidents.slice(0, 5).map((inc) => {
                 const status = inc.status.toUpperCase();
                 const timeStr = new Date(inc.created_at).toLocaleTimeString('en-GB');
@@ -133,7 +133,7 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({
                     <td className="py-2.5 font-bold text-stone-900 flex items-center space-x-1.5">
                       <span
                         className={`w-1.5 h-1.5 rounded-full inline-block ${
-                          inc.status === 'resolved' ? 'bg-[#2E7D32]' : 'bg-[#D32F2F]'
+                          inc.status === 'resolved' ? 'bg-emerald-600' : 'bg-rose-600'
                         }`}
                       />
                       <span>INC-{inc.id.slice(0, 8).toUpperCase()}</span>
@@ -146,7 +146,7 @@ export const RecentIncidentsTable: React.FC<RecentIncidentsTableProps> = ({
                     <td className="py-2.5 text-right">
                       <button
                         onClick={() => onSelectIncident?.(inc)}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-white hover:bg-stone-50 border border-[#E7E2D9] text-stone-700 rounded-lg shadow-2xs transition cursor-pointer"
+                        className="px-2.5 py-1 text-[11px] font-semibold bg-white hover:bg-stone-50 border border-stone-200/90 text-stone-700 rounded-lg shadow-2xs transition cursor-pointer"
                       >
                         Inspect
                       </button>

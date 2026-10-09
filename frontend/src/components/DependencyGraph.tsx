@@ -80,7 +80,7 @@ const ServiceNode: React.FC<NodeProps> = ({ data, selected }) => {
   return (
     <div
       className={`min-w-[150px] px-3.5 py-2.5 rounded-2xl border-2 transition-all cursor-pointer select-none shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex items-center space-x-2.5 ${borderColor} ${
-        isSelected ? 'ring-2 ring-[#D95A1E] ring-offset-2 ring-offset-[#FAF7F2]' : ''
+        isSelected ? 'ring-2 ring-[#D95A1E] ring-offset-2 ring-offset-white' : ''
       }`}
     >
       <Handle
@@ -196,39 +196,39 @@ export const DependencyGraph: React.FC<DependencyGraphProps> = ({
   }, [edgeList]);
 
   return (
-    <div className="bg-white border border-[#EBE5DB] rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col h-[420px]">
+    <div className="bg-white border border-stone-200/90 rounded-xl overflow-hidden shadow-xs flex flex-col h-[400px]">
       {/* Header with legends */}
-      <div className="px-5 py-3.5 border-b border-[#EFEAE2] flex items-center justify-between">
-        <h3 className="text-sm font-bold text-stone-900">
+      <div className="px-5 py-3 border-b border-stone-200/80 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-stone-900 tracking-tight">
           Service Dependency Graph
         </h3>
 
         <div className="flex items-center space-x-3 text-[11px] text-stone-600 font-medium">
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-[#2E7D32]"></span>
+            <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
             <span>Healthy</span>
           </span>
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-[#E65100]"></span>
+            <span className="w-2 h-2 rounded-full bg-amber-600"></span>
             <span>Degraded</span>
           </span>
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-[#D32F2F]"></span>
+            <span className="w-2 h-2 rounded-full bg-rose-600"></span>
             <span>Failed</span>
           </span>
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-[#1976D2]"></span>
+            <span className="w-2 h-2 rounded-full bg-blue-600"></span>
             <span>Recovering</span>
           </span>
           <span className="flex items-center space-x-1">
-            <span className="w-2 h-2 rounded-full bg-[#757575]"></span>
+            <span className="w-2 h-2 rounded-full bg-stone-500"></span>
             <span>Resolved</span>
           </span>
         </div>
       </div>
 
       {/* Canvas */}
-      <div className="flex-1 w-full h-full relative bg-[#FAF7F2]">
+      <div className="flex-1 w-full h-full relative bg-[#F8FAFC]">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -246,8 +246,8 @@ export const DependencyGraph: React.FC<DependencyGraphProps> = ({
           elementsSelectable={true}
           proOptions={{ hideAttribution: true }}
         >
-          <Background color="#E5DFD5" gap={16} size={1.2} />
-          <Controls showInteractive={false} className="!left-3 !bottom-3 !bg-white !border-[#E7E2D9] !shadow-xs !rounded-lg" />
+          <Background color="#CBD5E1" gap={16} size={1} />
+          <Controls showInteractive={false} className="!left-3 !bottom-3 !bg-white !border-stone-200 !shadow-xs !rounded-lg" />
         </ReactFlow>
       </div>
     </div>

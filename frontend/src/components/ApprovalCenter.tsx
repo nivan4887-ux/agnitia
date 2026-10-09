@@ -46,18 +46,18 @@ export const ApprovalCenter: React.FC<ApprovalCenterProps> = ({
   const pendingApprovals = approvals.filter((a) => a.status === 'pending');
 
   return (
-    <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-3.5">
+    <div className="bg-white border border-stone-200/90 rounded-xl p-4 shadow-xs space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <ShieldAlert className="w-4 h-4 text-[#D95A1E]" />
-          <h3 className="text-sm font-bold text-stone-900">Approval Center</h3>
+          <ShieldAlert className="w-4 h-4 text-[#EA580C]" />
+          <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider">Approval Center</h3>
         </div>
         <span
-          className={`px-2 py-0.5 text-[10px] font-bold font-mono rounded border ${
+          className={`px-2 py-0.5 text-[10px] font-bold rounded-md border ${
             pendingApprovals.length > 0
-              ? 'bg-[#FFF3E0] text-[#E65100] border-[#FFE0B2] animate-pulse'
-              : 'bg-emerald-50 text-[#2E7D32] border-emerald-200'
+              ? 'bg-amber-50 text-amber-700 border-amber-200 animate-pulse'
+              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
           }`}
         >
           {pendingApprovals.length} Pending
@@ -66,11 +66,11 @@ export const ApprovalCenter: React.FC<ApprovalCenterProps> = ({
 
       {/* Items */}
       {pendingApprovals.length === 0 ? (
-        <div className="py-6 px-4 rounded-xl bg-stone-50 border border-[#EFEAE2] text-center space-y-2">
-          <ShieldCheck className="w-6 h-6 text-emerald-600 mx-auto" />
-          <p className="text-xs font-bold text-stone-800">No Pending Approvals</p>
+        <div className="py-5 px-4 rounded-lg bg-stone-50/80 border border-stone-200/60 text-center space-y-1.5">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 mx-auto" />
+          <p className="text-xs font-semibold text-stone-800">No Pending Approvals</p>
           <p className="text-[11px] text-stone-500 max-w-xs mx-auto leading-relaxed">
-            High-risk operations (such as database snapshot restorations or payment provider failovers) will pause here for operator sign-off before executing.
+            High-risk operations will automatically pause here for operator sign-off before executing.
           </p>
         </div>
       ) : (

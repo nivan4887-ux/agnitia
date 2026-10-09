@@ -46,46 +46,46 @@ export const Header: React.FC<HeaderProps> = ({
       icon: AlertOctagon,
       badge: activeIncidentsCount > 0 ? activeIncidentsCount : undefined,
     },
-    { id: 'engine', label: 'Recovery Engine', icon: Flame },
-    { id: 'integrity', label: 'Data Integrity', icon: ShieldCheck },
-    { id: 'code_review', label: 'Code Review', icon: FileCode },
-    { id: 'graph', label: 'Dependency Graph', icon: Network },
-    { id: 'audit', label: 'Audit Log', icon: ClipboardList },
+    { id: 'engine', label: 'Recovery', icon: Flame },
+    { id: 'integrity', label: 'Integrity', icon: ShieldCheck },
+    { id: 'code_review', label: 'Code', icon: FileCode },
+    { id: 'graph', label: 'Graph', icon: Network },
+    { id: 'audit', label: 'Audit', icon: ClipboardList },
   ];
 
   return (
-    <header className="bg-[#1C130D] text-stone-300 border-b border-[#2C1E16] sticky top-0 z-50 shadow-md">
+    <header className="bg-[#18110B] text-stone-300 border-b border-[#2C1E16] sticky top-0 z-50 shadow-xs backdrop-blur-md">
       {/* Main Top Navigation Row */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-14 gap-3">
           {/* Left: Brand Identity & Primary Nav Links */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4 xl:space-x-6 min-w-0">
             {/* Brand Logo & Title */}
             <div
-              className="flex items-center space-x-3 cursor-pointer select-none shrink-0"
+              className="flex items-center space-x-2.5 cursor-pointer select-none shrink-0"
               onClick={() => {
                 onSelectNav('overview');
                 onSelectTab('dashboard');
               }}
             >
-              <div className="w-9 h-9 rounded-xl bg-white p-1 flex items-center justify-center shadow-md overflow-hidden">
+              <div className="w-8 h-8 rounded-lg bg-white p-1 flex items-center justify-center shadow-xs overflow-hidden">
                 <img src="/logo.png" alt="BRIDGE Logo" className="w-full h-full object-contain" />
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-base font-black text-white tracking-wider font-mono">
+              <div className="flex items-center space-x-1.5">
+                <span className="text-sm font-black text-white tracking-wider font-mono">
                   BRIDGE
                 </span>
-                <span className="px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-white/10 text-stone-300 rounded">
-                  v1.0.0
+                <span className="px-1.5 py-0.2 text-[9px] font-mono font-semibold bg-white/10 text-stone-300 rounded">
+                  v1.0
                 </span>
               </div>
             </div>
 
             {/* Vertical Divider */}
-            <div className="hidden md:block h-6 w-px bg-stone-700/60" />
+            <div className="hidden md:block h-4 w-px bg-stone-700/50" />
 
             {/* Navigation Tabs */}
-            <nav className="hidden lg:flex items-center space-x-1 shrink-0">
+            <nav className="hidden md:flex items-center space-x-1 shrink-0">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeNav === item.id && activeTab === 'dashboard';
@@ -97,16 +97,16 @@ export const Header: React.FC<HeaderProps> = ({
                       onSelectNav(item.id);
                       onSelectTab('dashboard');
                     }}
-                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
+                    className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-[#D95A1E] text-white shadow-sm'
+                        ? 'bg-[#EA580C] text-white font-semibold shadow-xs'
                         : 'text-stone-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
                     <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-white' : 'text-stone-400'}`} />
                     <span>{item.label}</span>
                     {item.badge !== undefined && (
-                      <span className="ml-1 px-1.5 py-0.2 rounded-full bg-[#D32F2F] text-white text-[10px] font-bold">
+                      <span className="ml-1 px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[9px] font-bold">
                         {item.badge}
                       </span>
                     )}
@@ -117,13 +117,13 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right: Mode Switchers & Telemetry */}
-          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <div className="flex items-center space-x-2 shrink-0">
             {/* Emergency SOS Trigger Button */}
             {onOpenSOS && (
               <button
                 onClick={onOpenSOS}
                 title="Trigger Emergency Priority-1 SOS Incident"
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider shadow-sm transition border border-rose-500/50 cursor-pointer active:scale-95 shrink-0"
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs uppercase tracking-wide shadow-xs transition cursor-pointer active:scale-95 shrink-0"
               >
                 <AlertOctagon className="w-3.5 h-3.5 text-white animate-pulse" />
                 <span>SOS Alert</span>
@@ -131,34 +131,34 @@ export const Header: React.FC<HeaderProps> = ({
             )}
 
             {/* Mode Switcher Pill Group */}
-            <div className="bg-[#2A1D15] p-1 rounded-xl border border-stone-800 flex items-center space-x-1">
+            <div className="bg-[#261710] p-0.5 rounded-lg border border-stone-800 flex items-center space-x-0.5">
               <button
                 onClick={() => onSelectTab('dashboard')}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center space-x-1.5 transition cursor-pointer ${
                   activeTab === 'dashboard'
-                    ? 'bg-[#D95A1E] text-white shadow-sm'
+                    ? 'bg-[#EA580C] text-white shadow-xs font-semibold'
                     : 'text-stone-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>SRE Console</span>
+                <LayoutGrid className="w-3 h-3" />
+                <span>Console</span>
               </button>
 
               <button
                 onClick={() => onSelectTab('demo_store')}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center space-x-1.5 transition cursor-pointer ${
                   activeTab === 'demo_store'
-                    ? 'bg-[#D95A1E] text-white shadow-sm'
+                    ? 'bg-[#EA580C] text-white shadow-xs font-semibold'
                     : 'text-stone-300 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Store className="w-3.5 h-3.5" />
-                <span>Live Store</span>
+                <Store className="w-3 h-3" />
+                <span>Store</span>
               </button>
             </div>
 
             {/* Vertical Divider */}
-            <div className="hidden sm:block h-5 w-px bg-stone-700/60" />
+            <div className="hidden sm:block h-4 w-px bg-stone-700/50 mx-0.5" />
 
             {/* Live System Status Indicators */}
             <div className="flex items-center space-x-2 text-xs font-medium text-stone-300">

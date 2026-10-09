@@ -72,7 +72,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Header Banner */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-[#D95A1E] text-white flex items-center justify-center shadow-md">
             <ClipboardList className="w-5 h-5" />
@@ -88,13 +88,13 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
         </div>
 
         <div className="flex items-center space-x-2">
-          <span className="text-xs font-mono text-stone-600 bg-stone-100 px-3 py-1.5 rounded-xl border border-stone-200">
+          <span className="text-xs font-mono text-stone-600 bg-stone-100 px-3 py-1.5 rounded-lg border border-stone-200">
             Total Records: {auditEvents.length}
           </span>
           <button
             onClick={onRefresh}
             title="Refresh audit log"
-            className="p-2 rounded-xl border border-[#E7E2D9] bg-stone-50 hover:bg-stone-100 text-stone-700 transition cursor-pointer"
+            className="p-2 rounded-lg border border-stone-200/80 bg-stone-50 hover:bg-stone-100 text-stone-700 transition cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -102,13 +102,13 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
       </div>
 
       {/* Filter & Search Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-[#EBE5DB] rounded-xl p-3 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-stone-200/90 rounded-xl p-3 shadow-xs">
         <div className="flex items-center space-x-2">
           <label className="text-xs font-bold text-stone-700">Filter Event Type:</label>
           <select
             value={filterEventType}
             onChange={(e) => setFilterEventType(e.target.value)}
-            className="bg-stone-50 border border-[#E7E2D9] rounded-lg px-2.5 py-1.5 text-xs text-stone-800 font-mono focus:outline-none"
+            className="bg-stone-50 border border-stone-200/80 rounded-lg px-2.5 py-1.5 text-xs text-stone-800 font-mono focus:outline-none"
           >
             <option value="all">All Events ({auditEvents.length})</option>
             {eventTypes.map((t) => (
@@ -126,14 +126,14 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
             placeholder="Search details, service, or incident ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-3 py-1.5 bg-stone-50 border border-[#E7E2D9] rounded-lg text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D95A1E] w-64 sm:w-80"
+            className="pl-8 pr-3 py-1.5 bg-stone-50 border border-stone-200/80 rounded-lg text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D95A1E] w-64 sm:w-80"
           />
         </div>
       </div>
 
       {/* Audit Log Table */}
       {filteredEvents.length === 0 ? (
-        <div className="bg-white border border-[#EBE5DB] rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3 shadow-xs">
+        <div className="bg-white border border-stone-200/90 rounded-xl p-12 text-center flex flex-col items-center justify-center space-y-3 shadow-xs">
           <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-500 flex items-center justify-center border border-stone-200">
             <Activity className="w-6 h-6" />
           </div>
@@ -145,11 +145,11 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-[#EBE5DB] rounded-2xl shadow-xs overflow-hidden">
+        <div className="bg-white border border-stone-200/90 rounded-xl shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-mono">
               <thead>
-                <tr className="text-stone-400 text-[11px] border-b border-[#EFEAE2] bg-stone-50/70">
+                <tr className="text-stone-400 text-[11px] border-b border-stone-200/80 bg-stone-50/70">
                   <th className="font-semibold py-3 px-4">Timestamp</th>
                   <th className="font-semibold py-3 px-4">Event Type</th>
                   <th className="font-semibold py-3 px-4">Target Service</th>
@@ -157,7 +157,7 @@ export const AuditLogView: React.FC<AuditLogViewProps> = ({
                   <th className="font-semibold py-3 px-4 text-right">Details</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F5F2EC]">
+              <tbody className="divide-y divide-stone-100">
                 {filteredEvents.map((event) => {
                   const isExpanded = expandedEventId === event.id;
                   const timeStr = new Date(event.timestamp).toLocaleString();

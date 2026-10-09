@@ -143,7 +143,7 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Top Banner & Outage Simulator Bar */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-stone-900 tracking-tight flex items-center space-x-2">
             <AlertOctagon className="w-5 h-5 text-[#D95A1E]" />
@@ -155,13 +155,13 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
         </div>
 
         {/* Trigger Outage Action Bar */}
-        <div className="flex items-center space-x-2 bg-stone-50 p-2 rounded-xl border border-[#E7E2D9]">
+        <div className="flex items-center space-x-2 bg-stone-50 p-2 rounded-lg border border-stone-200/80">
           <span className="text-xs font-semibold text-stone-700 hidden sm:inline">Chaos Simulator:</span>
           <select
             value={simulateService}
             onChange={(e) => setSimulateService(e.target.value)}
             disabled={isSimulating}
-            className="bg-white border border-[#E7E2D9] rounded-lg px-2.5 py-1.5 text-xs text-stone-800 font-mono focus:outline-none"
+            className="bg-white border border-stone-200/80 rounded-lg px-2.5 py-1.5 text-xs text-stone-800 font-mono focus:outline-none"
           >
             <option value="backend_api">backend_api (Core API)</option>
             <option value="products_api">products_api (Catalog)</option>
@@ -185,7 +185,7 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-[#EBE5DB] rounded-xl p-3 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-stone-200/90 rounded-xl p-3 shadow-xs">
         {/* Filter Pills */}
         <div className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none">
           {[
@@ -216,8 +216,8 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
               onClick={() => setFilterStatus(pill.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition cursor-pointer ${
                 filterStatus === pill.id
-                  ? 'bg-[#1C130D] text-white shadow-xs'
-                  : 'bg-stone-50 text-stone-600 hover:bg-stone-100 border border-[#E7E2D9]'
+                  ? 'bg-stone-900 text-white shadow-xs'
+                  : 'bg-stone-50 text-stone-600 hover:bg-stone-100 border border-stone-200/80'
               }`}
             >
               <span>{pill.label}</span>
@@ -243,14 +243,14 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
               placeholder="Search by ID or service..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 pr-3 py-1.5 bg-stone-50 border border-[#E7E2D9] rounded-lg text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D95A1E] w-52 sm:w-64"
+              className="pl-8 pr-3 py-1.5 bg-stone-50 border border-stone-200/80 rounded-lg text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D95A1E] w-52 sm:w-64"
             />
           </div>
 
           <button
             onClick={onRefresh}
             title="Refresh incidents"
-            className="p-1.5 rounded-lg border border-[#E7E2D9] bg-stone-50 hover:bg-stone-100 text-stone-600 hover:text-stone-900 transition cursor-pointer"
+            className="p-1.5 rounded-lg border border-stone-200/80 bg-stone-50 hover:bg-stone-100 text-stone-600 hover:text-stone-900 transition cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -259,11 +259,11 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
 
       {/* Incidents List */}
       {filteredIncidents.length === 0 ? (
-        <div className="bg-white border border-[#EBE5DB] rounded-2xl p-12 text-center flex flex-col items-center justify-center space-y-3 shadow-xs">
-          <div className="w-12 h-12 rounded-full bg-emerald-50 text-[#2E7D32] flex items-center justify-center border border-emerald-200">
+        <div className="bg-white border border-stone-200/90 rounded-xl p-12 text-center flex flex-col items-center justify-center space-y-3 shadow-xs">
+          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
             <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-bold text-stone-900">No Incidents Found</h3>
+          <h3 className="text-sm font-semibold text-stone-900">No Incidents Found</h3>
           <p className="text-xs text-stone-500 max-w-sm">
             {searchQuery
               ? 'No incidents match your current search query.'
@@ -282,10 +282,10 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
             return (
               <div
                 key={incident.id}
-                className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-4 hover:border-stone-300 transition"
+                className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs space-y-4 hover:border-stone-300 transition"
               >
                 {/* Header Row */}
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#F0EBE1] pb-3.5">
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200/80 pb-3.5">
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2.5">
                       <span className="text-sm font-bold text-stone-900 font-mono">

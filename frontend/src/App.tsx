@@ -209,7 +209,7 @@ export const App: React.FC = () => {
   const currentIncident = activeIncidents.length > 0 ? activeIncidents[0] : null;
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-stone-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen bg-[#F8F9FA] text-stone-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Top Navigation Bar with brand identity, nav tabs, mode switchers, & telemetry */}
       <Header
         activeNav={activeNav}
@@ -228,7 +228,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-w-0 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="flex-1 flex flex-col min-w-0 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-5">
         {/* Real-Time Emergency Alarm Siren Banner */}
         <EmergencyAlarmBanner
           activeIncidents={activeIncidents}

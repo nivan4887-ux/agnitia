@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, Heart, Shield, User, CircleDot } from 'lucide-react';
+import { AlertCircle, Activity, ShieldCheck, UserCheck, Flame } from 'lucide-react';
 import { Incident, ServiceHealth } from '../types';
 
 interface OverviewCardsProps {
@@ -14,6 +14,7 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
   pendingApprovalsCount,
 }) => {
   const serviceList = Object.entries(services);
+  const totalServices = serviceList.length || 5;
   const healthyCount = serviceList.filter(([_, s]) => s === 'healthy').length;
   const degradedCount = serviceList.filter(([_, s]) => s === 'degraded').length;
   const failedCount = serviceList.filter(
@@ -30,194 +31,226 @@ export const OverviewCards: React.FC<OverviewCardsProps> = ({
   const hasIncidents = activeIncidents.length > 0;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 mb-5">
       {/* 1. Active Incidents Card */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
-        <div className="flex items-center space-x-2.5">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-3.5 shadow-xs flex flex-col justify-between hover:border-stone-300 transition-all">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+            Active Incidents
+          </span>
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-              hasIncidents
-                ? 'bg-[#FFEBEE] text-[#D32F2F]'
-                : 'bg-[#E8F5E9] text-[#2E7D32]'
+            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+              hasIncidents ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'
             }`}
           >
-            <AlertCircle
-              className={`w-4 h-4 ${
-                hasIncidents ? 'fill-[#D32F2F] text-white' : 'text-[#2E7D32]'
-              }`}
-            />
+            <AlertCircle className="w-4 h-4" />
           </div>
-          <span className="text-xs font-bold text-stone-800">
-            Active Incidents
+        </div>
+
+        <div className="my-1.5">
+          <span className={`text-2xl font-black tracking-tight ${hasIncidents ? 'text-rose-600' : 'text-stone-900'}`}>
+            {activeIncidents.length}
           </span>
         </div>
 
-        <div className="mt-1">
-          <span className="text-2xl font-bold text-stone-900 block">
-            {activeIncidents.length}
-          </span>
-          <div className="mt-1">
+        <div>
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+              hasIncidents
+                ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+            }`}
+          >
             <span
-              className={`inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
-                hasIncidents
-                  ? 'text-[#D32F2F] bg-[#FFEBEE]'
-                  : 'text-[#2E7D32] bg-[#E8F5E9]'
+              className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                hasIncidents ? 'bg-rose-600 animate-pulse' : 'bg-emerald-500'
               }`}
-            >
-              {hasIncidents
-                ? `${failedCount} critical`
-                : 'All systems normal'}
-            </span>
-          </div>
+            />
+            {hasIncidents ? `${activeIncidents.length} Unresolved` : 'All Systems Normal'}
+          </span>
         </div>
       </div>
 
       {/* 2. Service Health Card */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-full bg-[#E8F5E9] text-[#2E7D32] flex items-center justify-center shrink-0">
-            <Heart className="w-4 h-4 fill-[#2E7D32] text-white" />
-          </div>
-          <span className="text-xs font-bold text-stone-800">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-3.5 shadow-xs flex flex-col justify-between hover:border-stone-300 transition-all">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
             Service Health
+          </span>
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <Activity className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="my-1.5 flex items-baseline space-x-1.5">
+          <span className="text-2xl font-black text-stone-900 tracking-tight">
+            {healthyCount}
+          </span>
+          <span className="text-xs text-stone-400 font-semibold">
+            / {totalServices} Healthy
           </span>
         </div>
 
-        <div className="text-[11px] space-y-0.5 font-medium mt-1">
-          <div className="flex items-center space-x-1.5 text-[#2E7D32]">
-            <span className="font-bold">{healthyCount}</span>
-            <span>Healthy</span>
-            <span className="text-stone-400">»</span>
-          </div>
-          <div className="flex items-center space-x-1.5 text-[#E65100]">
-            <span className="w-2 h-2 rounded-xs bg-[#E65100] inline-block"></span>
-            <span className="font-bold">{degradedCount}</span>
-            <span>Degraded</span>
-            <span className="text-stone-400">»</span>
-          </div>
-          <div className="flex items-center space-x-1.5 text-[#D32F2F]">
-            <span className="w-2 h-2 rounded-full bg-[#D32F2F] inline-block"></span>
-            <span className="font-bold">{failedCount}</span>
-            <span>Failed</span>
-            <span className="text-stone-400">»</span>
-          </div>
+        <div>
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+              failedCount > 0
+                ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                : degradedCount > 0
+                ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+            }`}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                failedCount > 0
+                  ? 'bg-rose-600'
+                  : degradedCount > 0
+                  ? 'bg-amber-500'
+                  : 'bg-emerald-500'
+              }`}
+            />
+            {failedCount > 0
+              ? `${failedCount} Failed`
+              : degradedCount > 0
+              ? `${degradedCount} Degraded`
+              : '100% Operational'}
+          </span>
         </div>
       </div>
 
       {/* 3. Recovery Readiness Card */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
-        <div className="flex items-center space-x-2.5">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-3.5 shadow-xs flex flex-col justify-between hover:border-stone-300 transition-all">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+            Recovery Engine
+          </span>
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-              hasIncidents
-                ? 'bg-[#FFF3E0] text-[#E65100]'
-                : 'bg-[#E8F5E9] text-[#2E7D32]'
+            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+              hasIncidents ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
             }`}
           >
-            <CircleDot className="w-4 h-4" />
+            <Flame className="w-4 h-4" />
           </div>
-          <span className="text-xs font-bold text-stone-800">
-            Recovery Readiness
+        </div>
+
+        <div className="my-1.5">
+          <span className="text-2xl font-black text-stone-900 tracking-tight">
+            {hasIncidents ? 'ARMED' : 'STANDBY'}
           </span>
         </div>
 
-        <div className="mt-1">
+        <div>
           <span
-            className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-md ${
+            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${
               hasIncidents
-                ? 'bg-[#FFF3E0] text-[#D95A1E] border border-[#FFE0B2]'
-                : 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]'
+                ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                : 'bg-stone-50 text-stone-600 border border-stone-200/60'
             }`}
           >
-            {hasIncidents ? 'ASSESSED' : 'STANDBY'}
+            <span
+              className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                hasIncidents ? 'bg-amber-500 animate-pulse' : 'bg-stone-400'
+              }`}
+            />
+            {hasIncidents ? 'Plan Ready' : 'Auto-Recovery Armed'}
           </span>
-          <p className="text-[11px] text-stone-500 mt-1">
-            {hasIncidents
-              ? `for ${activeIncidents.length} incident${
-                  activeIncidents.length > 1 ? 's' : ''
-                }`
-              : 'Engine armed'}
-          </p>
         </div>
       </div>
 
       {/* 4. Overall Risk Card */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
-        <div className="flex items-center space-x-2.5">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-3.5 shadow-xs flex flex-col justify-between hover:border-stone-300 transition-all">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+            Risk Posture
+          </span>
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
               failedCount > 0
-                ? 'bg-[#FFEBEE] text-[#D32F2F]'
-                : 'bg-[#E8F5E9] text-[#2E7D32]'
+                ? 'bg-rose-50 text-rose-600'
+                : degradedCount > 0
+                ? 'bg-amber-50 text-amber-600'
+                : 'bg-emerald-50 text-emerald-600'
             }`}
           >
-            <Shield
-              className={`w-4 h-4 ${
-                failedCount > 0 ? 'fill-[#D32F2F]/20' : 'fill-[#2E7D32]/20'
-              }`}
-            />
+            <ShieldCheck className="w-4 h-4" />
           </div>
-          <span className="text-xs font-bold text-stone-800">
-            Overall Risk
+        </div>
+
+        <div className="my-1.5">
+          <span
+            className={`text-2xl font-black tracking-tight ${
+              failedCount > 0
+                ? 'text-rose-600'
+                : degradedCount > 0
+                ? 'text-amber-600'
+                : 'text-stone-900'
+            }`}
+          >
+            {failedCount > 0 ? 'CRITICAL' : degradedCount > 0 ? 'ELEVATED' : 'NOMINAL'}
           </span>
         </div>
 
-        <div className="mt-1">
+        <div>
           <span
-            className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-md ${
+            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${
               failedCount > 0
-                ? 'bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2]'
+                ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
                 : degradedCount > 0
-                ? 'bg-[#FFF3E0] text-[#E65100] border border-[#FFE0B2]'
-                : 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]'
+                ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
             }`}
           >
-            {failedCount > 0 ? 'ELEVATED' : degradedCount > 0 ? 'MODERATE' : 'LOW'}
+            <span
+              className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                failedCount > 0 ? 'bg-rose-600' : degradedCount > 0 ? 'bg-amber-500' : 'bg-emerald-500'
+              }`}
+            />
+            {failedCount > 0 ? 'Outage Active' : degradedCount > 0 ? 'Degraded Traffic' : 'Zero Active Threats'}
           </span>
-          <p className="text-[11px] text-stone-500 mt-1">
-            {failedCount > 0
-              ? 'Outage active'
-              : degradedCount > 0
-              ? 'Degraded service'
-              : 'Nominal baseline'}
-          </p>
         </div>
       </div>
 
       {/* 5. Pending Approvals Card */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between h-32">
-        <div className="flex items-center space-x-2.5">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-3.5 shadow-xs flex flex-col justify-between hover:border-stone-300 transition-all col-span-2 sm:col-span-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+            Pending Gates
+          </span>
           <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+            className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
               pendingApprovalsCount > 0
-                ? 'bg-[#FFF3E0] text-[#E65100]'
-                : 'bg-[#F5F2EC] text-stone-600'
+                ? 'bg-amber-50 text-amber-600'
+                : 'bg-stone-50 text-stone-600'
             }`}
           >
-            <User className="w-4 h-4" />
+            <UserCheck className="w-4 h-4" />
           </div>
-          <span className="text-xs font-bold text-stone-800">
-            Pending Approvals
+        </div>
+
+        <div className="my-1.5">
+          <span className="text-2xl font-black text-stone-900 tracking-tight">
+            {pendingApprovalsCount}
           </span>
         </div>
 
-        <div className="mt-1">
-          <span className="text-2xl font-bold text-stone-900 block">
-            {pendingApprovalsCount}
-          </span>
-          <div className="mt-1">
+        <div>
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold ${
+              pendingApprovalsCount > 0
+                ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                : 'bg-stone-50 text-stone-600 border border-stone-200/60'
+            }`}
+          >
             <span
-              className={`inline-block text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${
-                pendingApprovalsCount > 0
-                  ? 'text-[#E65100] bg-[#FFF3E0]'
-                  : 'text-stone-500 bg-[#F5F2EC]'
+              className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                pendingApprovalsCount > 0 ? 'bg-amber-500 animate-pulse' : 'bg-stone-400'
               }`}
-            >
-              {pendingApprovalsCount > 0
-                ? `${pendingApprovalsCount} high risk`
-                : '0 pending gates'}
-            </span>
-          </div>
+            />
+            {pendingApprovalsCount > 0
+              ? `${pendingApprovalsCount} High Risk Actions`
+              : '0 Pending Gates'}
+          </span>
         </div>
       </div>
     </div>

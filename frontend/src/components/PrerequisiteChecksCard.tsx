@@ -23,19 +23,19 @@ export const PrerequisiteChecksCard: React.FC<PrerequisiteChecksCardProps> = ({
   const targetService = assessment?.target_service || 'All services';
 
   return (
-    <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-3.5">
+    <div className="bg-white border border-stone-200/90 rounded-xl p-4 shadow-xs space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-stone-900">
+        <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider">
           Prerequisite Checks
         </h3>
         <span
-          className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
+          className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase ${
             isBlocked
-              ? 'bg-[#FFEBEE] text-[#D32F2F] border border-[#FFCDD2]'
+              ? 'bg-rose-50 text-rose-700 border border-rose-200/60'
               : hasAssessment
-              ? 'bg-[#E8F5E9] text-[#2E7D32] border border-[#C8E6C9]'
-              : 'bg-[#FAF7F2] text-stone-600 border border-[#EBE5DB]'
+              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+              : 'bg-stone-50 text-stone-600 border border-stone-200/60'
           }`}
         >
           {isBlocked ? 'BLOCKED' : hasAssessment ? 'ALL CLEAR' : 'NOMINAL'}

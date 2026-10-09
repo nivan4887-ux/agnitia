@@ -186,7 +186,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
   return (
     <div className="space-y-5">
       {/* Header Banner */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-[#D95A1E] text-white flex items-center justify-center shadow-md">
             <Flame className="w-5 h-5" />
@@ -211,7 +211,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
           <button
             onClick={() => runAssessment()}
             disabled={isLoading}
-            className="px-3 py-1.5 bg-white hover:bg-stone-50 border border-[#E7E2D9] text-stone-700 text-xs font-semibold rounded-lg shadow-2xs flex items-center space-x-1.5 transition cursor-pointer"
+            className="px-3 py-1.5 bg-white hover:bg-stone-50 border border-stone-200/80 text-stone-700 text-xs font-semibold rounded-lg shadow-2xs flex items-center space-x-1.5 transition cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-[#D95A1E]' : ''}`} />
             <span>Re-Assess</span>
@@ -220,7 +220,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
       </div>
 
       {/* Target Topology & Incident Selector */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white border border-[#EBE5DB] rounded-2xl p-4 shadow-xs">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white border border-stone-200/90 rounded-xl p-4 shadow-xs">
         <div>
           <label className="block text-xs font-bold text-stone-700 mb-1.5">
             1. Select Target Service to Evaluate:
@@ -232,7 +232,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
               setSelectedIncidentId('');
             }}
             disabled={isLoading}
-            className="w-full bg-stone-50 border border-[#E7E2D9] rounded-xl px-3 py-2 text-xs text-stone-900 font-mono focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D95A1E]"
+            className="w-full bg-stone-50 border border-stone-200/80 rounded-lg px-3 py-2 text-xs text-stone-900 font-mono focus:outline-none focus:bg-white focus:ring-1 focus:ring-[#D95A1E]"
           >
             {serviceNames.map((s) => (
               <option key={s} value={s}>
@@ -293,7 +293,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
 
           {/* Topological Sequence & Blast Radius */}
           {assessment.recovery_order && assessment.recovery_order.length > 0 && (
-            <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-xs space-y-3">
+            <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Layers className="w-4 h-4 text-[#D95A1E]" />
@@ -310,10 +310,10 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
                 {assessment.recovery_order.map((step, idx) => (
                   <React.Fragment key={step}>
                     <div
-                      className={`px-3 py-1.5 rounded-xl text-xs font-mono font-semibold border flex items-center space-x-1.5 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border flex items-center space-x-1.5 ${
                         step === assessment.target_service
-                          ? 'bg-[#FFF3E0] text-[#D95A1E] border-[#FFE0B2] shadow-2xs'
-                          : 'bg-stone-50 text-stone-700 border-[#E7E2D9]'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200 shadow-2xs'
+                          : 'bg-stone-50 text-stone-700 border-stone-200/80'
                       }`}
                     >
                       <span className="w-4 h-4 rounded-full bg-black/10 text-[10px] flex items-center justify-center font-bold">
@@ -403,8 +403,8 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
 
           {/* Diagnostic Findings */}
           {assessment.findings && assessment.findings.length > 0 && (
-            <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-xs space-y-3">
-              <div className="flex items-center justify-between border-b border-[#F0EBE1] pb-3">
+            <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-stone-200/80 pb-3">
                 <div className="flex items-center space-x-2">
                   <Zap className="w-4 h-4 text-[#D95A1E]" />
                   <h3 className="text-sm font-bold text-stone-900">
@@ -420,7 +420,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
                 {assessment.findings.map((f, i) => (
                   <div
                     key={i}
-                    className="flex items-start space-x-2.5 p-2.5 rounded-xl bg-stone-50 border border-[#E7E2D9] text-xs font-mono"
+                    className="flex items-start space-x-2.5 p-2.5 rounded-lg bg-stone-50 border border-stone-200/80 text-xs font-mono"
                   >
                     {getSeverityIcon(f.severity)}
                     <div className="flex-1">
@@ -434,7 +434,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
           )}
 
           {/* Action Execution Bar */}
-          <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center space-x-2 text-xs text-stone-500 font-mono">
               <Clock className="w-3.5 h-3.5" />
               <span>Assessed at {new Date(assessment.assessed_at).toLocaleTimeString()}</span>
@@ -445,7 +445,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => onInspectPlan(selectedService || 'backend_api')}
-                className="px-4 py-2 bg-white hover:bg-stone-50 border border-[#E7E2D9] text-stone-800 text-xs font-semibold rounded-xl shadow-2xs flex items-center space-x-2 transition cursor-pointer"
+                className="px-4 py-2 bg-white hover:bg-stone-50 border border-stone-200/80 text-stone-800 text-xs font-semibold rounded-lg shadow-2xs flex items-center space-x-2 transition cursor-pointer"
               >
                 <FileCode className="w-4 h-4 text-stone-600" />
                 <span>Inspect Playbook</span>
@@ -457,7 +457,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
                   onExecuteRecovery(targetIncId);
                 }}
                 disabled={isExecuting || assessment.readiness_status === 'BLOCKED'}
-                className="px-5 py-2 bg-[#D95A1E] hover:bg-[#B84511] text-white text-xs font-semibold rounded-xl shadow-sm flex items-center space-x-2 transition disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2 bg-[#D95A1E] hover:bg-[#B84511] text-white text-xs font-semibold rounded-lg shadow-sm flex items-center space-x-2 transition disabled:opacity-50 cursor-pointer"
               >
                 {isExecuting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -470,7 +470,7 @@ export const RecoveryEngineView: React.FC<RecoveryEngineViewProps> = ({
           </div>
         </div>
       ) : (
-        <div className="py-12 flex flex-col items-center justify-center space-y-2 text-stone-500 bg-white rounded-2xl border border-[#EBE5DB]">
+        <div className="py-12 flex flex-col items-center justify-center space-y-2 text-stone-500 bg-white rounded-xl border border-stone-200/90">
           <Loader2 className="w-6 h-6 animate-spin text-[#D95A1E]" />
           <p className="text-xs font-mono">Assessing recovery readiness & prerequisite DAG...</p>
         </div>

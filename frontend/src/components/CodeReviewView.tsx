@@ -108,7 +108,7 @@ POOL_RECOVERY_BACKOFF_MS = 250
   return (
     <div className="space-y-5">
       {/* Header Banner */}
-      <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
             <FileCode className="w-5 h-5" />
@@ -127,7 +127,7 @@ POOL_RECOVERY_BACKOFF_MS = 250
           <button
             onClick={fetchChangeSets}
             disabled={isLoading}
-            className="px-3 py-1.5 bg-white hover:bg-stone-50 border border-[#E7E2D9] text-stone-700 text-xs font-semibold rounded-lg shadow-2xs flex items-center space-x-1.5 transition cursor-pointer"
+            className="px-3 py-1.5 bg-white hover:bg-stone-50 border border-stone-200/80 text-stone-700 text-xs font-semibold rounded-lg shadow-2xs flex items-center space-x-1.5 transition cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
             <span>Refresh</span>
@@ -177,7 +177,7 @@ POOL_RECOVERY_BACKOFF_MS = 250
           }}
         />
       ) : (
-        <div className="bg-white border border-[#EBE5DB] rounded-2xl p-12 text-center space-y-4">
+        <div className="bg-white border border-stone-200/90 rounded-xl p-12 text-center space-y-4">
           <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
             <FolderGit2 className="w-6 h-6" />
           </div>
@@ -190,7 +190,7 @@ POOL_RECOVERY_BACKOFF_MS = 250
           <button
             onClick={handleGenerateDemoPatch}
             disabled={isGeneratingDemo}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow-sm inline-flex items-center space-x-2 transition cursor-pointer"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow-sm inline-flex items-center space-x-2 transition cursor-pointer"
           >
             <Sparkles className="w-4 h-4" />
             <span>Propose Sample Source Patch</span>

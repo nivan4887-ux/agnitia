@@ -39,14 +39,14 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({
   });
 
   return (
-    <div className="bg-white border border-[#EBE5DB] rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] space-y-3.5">
+    <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs space-y-3.5">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-stone-900">Audit Timeline</h3>
+        <h3 className="text-sm font-semibold text-stone-900 tracking-tight">Audit Timeline</h3>
         {onViewAll && (
           <button
             onClick={onViewAll}
-            className="text-xs font-semibold text-[#D95A1E] hover:underline cursor-pointer"
+            className="text-xs font-medium text-stone-500 hover:text-stone-900 transition cursor-pointer"
           >
             View All
           </button>
@@ -55,7 +55,7 @@ export const AuditTimeline: React.FC<AuditTimelineProps> = ({
 
       {/* Events List or Empty State */}
       {formattedEvents.length === 0 ? (
-        <div className="py-6 text-center text-stone-500 flex flex-col items-center justify-center space-y-1.5 border border-dashed border-[#E7E2D9] rounded-xl bg-stone-50/50">
+        <div className="py-6 text-center text-stone-500 flex flex-col items-center justify-center space-y-1.5 rounded-lg bg-stone-50/70 border border-stone-200/60">
           <p className="text-xs font-semibold text-stone-800">No audit events recorded</p>
           <p className="text-[11px] text-stone-500">
             Lifecycle transitions, approvals, and recoveries will be recorded here.
