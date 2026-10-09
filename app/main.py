@@ -92,6 +92,12 @@ class SOSIncidentRequest(BaseModel):
     idempotency_key: Optional[str] = None
 
 
+class FaultInjectionRequest(BaseModel):
+    fault_type: str = "api_500_fault"
+    service: Optional[str] = None
+    reason: Optional[str] = None
+
+
 # ---------------------------------------------------------------------------
 # Existing Milestone 1 Routes (Preserved)
 # ---------------------------------------------------------------------------
@@ -130,20 +136,109 @@ def list_dependencies():
 
 
 @app.post("/simulate/fail/{service_name}")
-def simulate_failure(service_name: str):
+def simulate_failure(service_name: str, fault_type: Optional[str] = None):
     """Simulate a failure in *service_name* and cascade to dependents."""
     if service_name not in dep_graph.nodes:
         raise HTTPException(
             status_code=404,
             detail=f"Unknown service: '{service_name}'",
         )
+    return inject_fault_endpoint(FaultInjectionRequest(service=service_name, fault_type=fault_type or "api_500_fault"))
+
+
+@app.post("/simulate/inject-fault")
+def inject_fault_endpoint(payload: FaultInjectionRequest):
+    """Inject a specific fault scenario across any microservice and dispatch automated SOS."""
+    fault_type = payload.fault_type or "api_500_fault"
+
+    FAULT_MAP = {
+        "api_500_fault": {
+            "service": "backend_api",
+            "reason": "HTTP 500 Internal Server Error spike: Unhandled NullReferenceException in /api/v1/checkout route handler",
+            "failure_type": "api_500_fault",
+        },
+        "gateway_timeout": {
+            "service": "backend_api",
+            "reason": "HTTP 504 Gateway Timeout: Upstream microservice response latency exceeded 8000ms SLA threshold",
+            "failure_type": "gateway_timeout",
+        },
+        "frontend_syntax_crash": {
+            "service": "website",
+            "reason": "Frontend AST syntax error: Unexpected token ';' in App.tsx. Vite production build failed",
+            "failure_type": "frontend_build_failure",
+        },
+        "order_backpressure": {
+            "service": "order_service",
+            "reason": "RabbitMQ message consumer deadlock: 4,200 unacknowledged checkout jobs stalled in queue",
+            "failure_type": "order_backpressure",
+        },
+        "payment_timeout": {
+            "service": "payment_service",
+            "reason": "Payment gateway settlement drop: Third-party payment provider webhook timed out after 3 retries",
+            "failure_type": "payment_gateway_unavailable",
+        },
+        "database_deadlock": {
+            "service": "database",
+            "reason": "Database connection pool exhausted: 100/100 active connections leased, query lockup detected",
+            "failure_type": "database_deadlock",
+        },
+        "data_corruption": {
+            "service": "database",
+            "reason": "Data integrity violation: Malformed record with script injection and negative monetary price quarantined",
+            "failure_type": "database_corruption_detected",
+        },
+    }
+
+    cfg = FAULT_MAP.get(fault_type) or {
+        "service": payload.service or "backend_api",
+        "reason": payload.reason or f"Fault scenario '{fault_type}' injected",
+        "failure_type": fault_type,
+    }
+
+    target_service = payload.service or cfg["service"]
+    target_reason = payload.reason or cfg["reason"]
+    target_failure_type = cfg.get("failure_type", "simulated_failure")
+
+    # If frontend syntax crash, also trigger disposable syntax error in build_monitor
+    if fault_type == "frontend_syntax_crash":
+        try:
+            import os
+            from app import build_monitor
+            build_monitor.inject_controlled_syntax_error()
+        except Exception as exc:
+            logger.warning("Could not create disposable syntax error file: %s", exc)
+
+    # If data corruption, trigger data_integrity quarantine
+    if fault_type == "data_corruption":
+        try:
+            from app import data_integrity
+            quar_res = data_integrity.inject_malformed_record("script_injection", auto_trigger_sos=True)
+            active_inc = sos.get_active_incident_for_service("database")
+            return {
+                "status": "ok",
+                "fault_type": fault_type,
+                "service": target_service,
+                "incident": active_inc,
+                "quarantine": quar_res,
+                "message": f"Data integrity breach injected on {target_service}: record quarantined into dead-letter vault.",
+            }
+        except Exception as exc:
+            logger.warning("Data integrity injection failed: %s", exc)
+
     sos_res = sos.dispatch_sos_incident(
-        service=service_name,
-        reason=f"Manual failure simulation injected on '{service_name}'",
-        reporter="manual_simulation",
-        failure_type="simulated_failure",
+        service=target_service,
+        reason=target_reason,
+        reporter="chaos_fault_injector",
+        failure_type=target_failure_type,
+        metadata={"fault_type": fault_type},
     )
-    return {"incident": sos_res.get("incident")}
+    return {
+        "status": "ok",
+        "fault_type": fault_type,
+        "service": target_service,
+        "incident": sos_res.get("incident"),
+        "message": f"Successfully injected {fault_type} on service {target_service}",
+    }
 
 
 @app.post("/incidents/sos")

@@ -39,6 +39,7 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [simulateService, setSimulateService] = useState<string>('backend_api');
+  const [simulateFaultType, setSimulateFaultType] = useState<string>('api_500_fault');
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
   const handleApprove = async (approvalId: string) => {
@@ -85,7 +86,14 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
   const handleSimulateOutage = async () => {
     setIsSimulating(true);
     try {
-      await api.simulateFailure(simulateService);
+      if (simulateFaultType) {
+        await api.injectFault({
+          fault_type: simulateFaultType,
+          service: simulateService,
+        });
+      } else {
+        await api.simulateFailure(simulateService);
+      }
       onRefresh();
     } catch (err: any) {
       onError(err.message || `Failed to trigger outage on ${simulateService}`);
@@ -155,19 +163,29 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
         </div>
 
         {/* Trigger Outage Action Bar */}
-        <div className="flex items-center space-x-2 bg-stone-50 p-2 rounded-lg border border-stone-200/80">
-          <span className="text-xs font-semibold text-stone-700 hidden sm:inline">Chaos Simulator:</span>
+        <div className="flex flex-wrap items-center gap-2 bg-stone-50 p-2 rounded-lg border border-stone-200/80">
+          <span className="text-xs font-semibold text-stone-700 hidden sm:inline">Scenario:</span>
           <select
-            value={simulateService}
-            onChange={(e) => setSimulateService(e.target.value)}
+            value={simulateFaultType}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSimulateFaultType(val);
+              if (val === 'frontend_syntax_crash') setSimulateService('website');
+              else if (val === 'database_deadlock' || val === 'data_corruption') setSimulateService('database');
+              else if (val === 'order_backpressure') setSimulateService('order_service');
+              else if (val === 'payment_timeout') setSimulateService('payment_service');
+              else setSimulateService('backend_api');
+            }}
             disabled={isSimulating}
             className="bg-white border border-stone-200/80 rounded-lg px-2.5 py-1.5 text-xs text-stone-800 font-mono focus:outline-none"
           >
-            <option value="backend_api">backend_api (Core API)</option>
-            <option value="products_api">products_api (Catalog)</option>
-            <option value="database">database (High-Risk DB)</option>
-            <option value="payment_service">payment_service (Payments)</option>
-            <option value="website">website (Frontend UI)</option>
+            <option value="api_500_fault">API 500 Spike (backend_api • ~15s)</option>
+            <option value="gateway_timeout">504 Gateway Timeout (backend_api • ~18s)</option>
+            <option value="order_backpressure">Queue Backpressure (order_service • ~20s)</option>
+            <option value="payment_timeout">Payment Settlement (payment_service • ~22s)</option>
+            <option value="frontend_syntax_crash">Vite AST Crash (website • ~25s)</option>
+            <option value="database_deadlock">DB Pool Deadlock (database • ~28s)</option>
+            <option value="data_corruption">Data Corruption Quarantine (database • ~28s)</option>
           </select>
           <button
             onClick={handleSimulateOutage}

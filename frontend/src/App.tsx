@@ -27,6 +27,7 @@ import { DependencyGraphView } from './components/DependencyGraphView';
 import { AuditLogView } from './components/AuditLogView';
 import { CodeChangeReviewModal } from './components/CodeChangeReviewModal';
 import { SOSTriggerModal } from './components/SOSTriggerModal';
+import { FaultInjectionModal } from './components/FaultInjectionModal';
 import { EmergencyAlarmBanner } from './components/EmergencyAlarmBanner';
 import { DataIntegrityView } from './components/DataIntegrityView';
 import { AlertTriangle, XCircle, CheckCircle2, AlertOctagon } from 'lucide-react';
@@ -60,6 +61,7 @@ export const App: React.FC = () => {
   const [reviewChangeSet, setReviewChangeSet] = useState<ChangeSet | null>(null);
   const [isExecutingRecovery, setIsExecutingRecovery] = useState<boolean>(false);
   const [isSosModalOpen, setIsSosModalOpen] = useState<boolean>(false);
+  const [isFaultModalOpen, setIsFaultModalOpen] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
 
@@ -224,6 +226,7 @@ export const App: React.FC = () => {
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         onOpenSOS={() => setIsSosModalOpen(true)}
+        onOpenInjectFault={() => setIsFaultModalOpen(true)}
       />
 
       {/* Main Container */}
@@ -451,6 +454,18 @@ export const App: React.FC = () => {
           fetchData();
           showSuccess(
             `P1 Emergency SOS incident '${newIncident.id}' successfully registered for service '${newIncident.failed_service}'.`
+          );
+        }}
+      />
+
+      {/* Chaos & Fault Injection Suite Modal */}
+      <FaultInjectionModal
+        isOpen={isFaultModalOpen}
+        onClose={() => setIsFaultModalOpen(false)}
+        onIncidentCreated={(newIncident) => {
+          fetchData();
+          showSuccess(
+            `Fault injected: Incident '${newIncident.id}' successfully registered for '${newIncident.failed_service}'.`
           );
         }}
       />

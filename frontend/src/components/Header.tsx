@@ -22,6 +22,7 @@ interface HeaderProps {
   activeTab: 'dashboard' | 'demo_store';
   onSelectTab: (tab: 'dashboard' | 'demo_store') => void;
   onOpenSOS?: () => void;
+  onOpenInjectFault?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   onSelectTab,
   onOpenSOS,
+  onOpenInjectFault,
 }) => {
 
   const navItems = [
@@ -116,6 +118,18 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right: Mode Switchers & Telemetry */}
           <div className="flex items-center space-x-2 shrink-0">
+            {/* Inject Fault Trigger Button */}
+            {onOpenInjectFault && (
+              <button
+                onClick={onOpenInjectFault}
+                title="Open Fault & Chaos Injection Suite"
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs uppercase tracking-wide shadow-xs transition cursor-pointer active:scale-95 shrink-0"
+              >
+                <Flame className="w-3.5 h-3.5 text-white" />
+                <span>Inject Error</span>
+              </button>
+            )}
+
             {/* Emergency SOS Trigger Button */}
             {onOpenSOS && (
               <button
@@ -191,6 +205,15 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Mobile / Tablet Nav Row (Visible when screen is smaller than lg) */}
         <div className="lg:hidden flex items-center space-x-1 overflow-x-auto py-2 border-t border-stone-800/80 scrollbar-none">
+          {onOpenInjectFault && (
+            <button
+              onClick={onOpenInjectFault}
+              className="flex items-center space-x-1 px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-orange-600 text-white shrink-0 active:scale-95 transition"
+            >
+              <Flame className="w-3 h-3 text-white" />
+              <span>Fault</span>
+            </button>
+          )}
           {onOpenSOS && (
             <button
               onClick={onOpenSOS}

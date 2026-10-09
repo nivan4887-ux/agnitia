@@ -102,9 +102,17 @@ export const api = {
     return fetchJson(`${API_BASE_URL}/dependencies`);
   },
 
-  simulateFailure: async (serviceName: string): Promise<{ incident: Incident }> => {
-    return fetchJson(`${API_BASE_URL}/simulate/fail/${encodeURIComponent(serviceName)}`, {
+  simulateFailure: async (serviceName: string, faultType?: string): Promise<{ incident: Incident }> => {
+    const query = faultType ? `?fault_type=${encodeURIComponent(faultType)}` : '';
+    return fetchJson(`${API_BASE_URL}/simulate/fail/${encodeURIComponent(serviceName)}${query}`, {
       method: 'POST',
+    });
+  },
+
+  injectFault: async (payload: { fault_type: string; service?: string; reason?: string }): Promise<any> => {
+    return fetchJson(`${API_BASE_URL}/simulate/inject-fault`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
   },
 

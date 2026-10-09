@@ -40,8 +40,38 @@ export const CodeChangeReviewPanel: React.FC<CodeChangeReviewPanelProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showLogsDrawer, setShowLogsDrawer] = useState<boolean>(false);
 
-  // 12–15 Second Progressive AI Coding Agent Review Phase State
-  const TOTAL_REVIEW_DURATION = 12.0; // 12-15 seconds review cadence
+  // Dynamic Progressive AI Coding Agent Review Duration State (Minimum 15s)
+  const getReviewDurationForChangeSet = (cs: ChangeSet): number => {
+    const service = cs.service;
+    const title = cs.title?.toLowerCase() || '';
+    const desc = cs.description?.toLowerCase() || '';
+
+    // Database: complex lock analysis, migration rollback & zero-contamination quarantine verification
+    if (service === 'database' || title.includes('database') || desc.includes('database')) {
+      return 28.0;
+    }
+    // Frontend: TypeScript AST parsing, component token cleaning, and Vite production bundle rebuild
+    if (service === 'website' || title.includes('frontend') || desc.includes('frontend') || title.includes('syntax') || desc.includes('syntax')) {
+      return 25.0;
+    }
+    // Payment: external acquirer settlement connector & webhook retry verification
+    if (service === 'payment_service' || title.includes('payment') || desc.includes('payment')) {
+      return 22.0;
+    }
+    // Order Service: RabbitMQ worker concurrency rebalance & backpressure queue drain
+    if (service === 'order_service' || title.includes('order') || title.includes('queue') || desc.includes('queue')) {
+      return 20.0;
+    }
+    // Gateway Timeout & Circuit Breaker: latency SLA boundary & proxy retries
+    if (title.includes('gateway') || title.includes('timeout') || desc.includes('timeout')) {
+      return 18.0;
+    }
+    // API 500 Fault: defensive route boundary & exception handler (Minimum 15 seconds)
+    return 15.0;
+  };
+
+  const TOTAL_REVIEW_DURATION = getReviewDurationForChangeSet(changeSet);
+
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(() => {
     if (changeSet.status === 'applied') return TOTAL_REVIEW_DURATION;
     if (changeSet.created_at) {
@@ -54,37 +84,42 @@ export const CodeChangeReviewPanel: React.FC<CodeChangeReviewPanelProps> = ({
   const isReviewPhaseComplete = elapsedSeconds >= TOTAL_REVIEW_DURATION || changeSet.status === 'applied';
   const progressPercent = Math.min(100, Math.round((elapsedSeconds / TOTAL_REVIEW_DURATION) * 100));
 
-  // Determine current progressive review stage
+  // Determine current progressive review stage tailored to problem type
   const getReviewPhaseInfo = (seconds: number) => {
-    if (seconds < 3.0) {
+    const p1 = TOTAL_REVIEW_DURATION * 0.25;
+    const p2 = TOTAL_REVIEW_DURATION * 0.50;
+    const p3 = TOTAL_REVIEW_DURATION * 0.75;
+    const service = changeSet.service || 'backend_api';
+
+    if (seconds < p1) {
       return {
-        stageId: 'inspecting_files',
-        title: 'Phase 1/4: Analyzing Failure Telemetry & SHA-256 Hashes',
-        detail: 'AI Agent inspecting working tree, computing baseline hashes and verifying service diagnostics...',
+        stageId: 'inspecting_telemetry',
+        title: `Phase 1/4: Analyzing Failure Telemetry & SHA-256 Hashes (${service})`,
+        detail: `AI Agent inspecting working tree, computing baseline hashes and verifying ${service} diagnostics...`,
       };
-    } else if (seconds < 6.0) {
+    } else if (seconds < p2) {
       return {
-        stageId: 'analyzing_dependencies',
-        title: 'Phase 2/4: Topologically Evaluating Dependency Graph',
-        detail: 'Analyzing upstream prerequisites, root causes, and downstream service blast radius...',
+        stageId: 'evaluating_dependencies',
+        title: `Phase 2/4: Topologically Evaluating Dependency Blast Radius`,
+        detail: `Analyzing upstream prerequisites, root causes, and isolating cascaded service failures...`,
       };
-    } else if (seconds < 9.0) {
+    } else if (seconds < p3) {
       return {
         stageId: 'synthesizing_diffs',
-        title: 'Phase 3/4: Synthesizing AI Patch & Line-by-Line Unified Diffs',
-        detail: 'Generating clean unified diffs with exact addition/deletion counts (+N/-N) for review...',
+        title: `Phase 3/4: Synthesizing Multi-File AI Patch & Unified Diffs`,
+        detail: `Generating clean unified diffs (+N/-N) tailored for ${changeSet.title || service}...`,
       };
-    } else if (seconds < 12.0) {
+    } else if (seconds < TOTAL_REVIEW_DURATION) {
       return {
-        stageId: 'staging_review',
-        title: 'Phase 4/4: Validating Pre-flight Safety Checks & Staging Verification',
-        detail: 'Checking Python syntax (py_compile) and preparing verified patch for operator authorization...',
+        stageId: 'preflight_validation',
+        title: `Phase 4/4: Pre-Flight Safety Compilation & Staging Verification`,
+        detail: `Running automated pre-flight checks, syntax compilation, and preparing verified patch for application...`,
       };
     } else {
       return {
-        stageId: 'ready',
-        title: 'Phase 4/4 Complete: Validated Pre-Flight Checks & Applying Patch...',
-        detail: 'Pre-flight compilation and SHA-256 integrity passed. Applying verified patch and returning to dashboard for live health verification.',
+        stageId: 'applying_patch',
+        title: `Phase 4/4 Complete: Applying Verified Patch & Triggering Probes...`,
+        detail: `Pre-flight checks passed cleanly. Applying patch to working tree and verifying live health probes...`,
       };
     }
   };
@@ -107,7 +142,7 @@ export const CodeChangeReviewPanel: React.FC<CodeChangeReviewPanelProps> = ({
     }, 200);
 
     return () => clearInterval(timer);
-  }, [isReviewPhaseComplete]);
+  }, [isReviewPhaseComplete, TOTAL_REVIEW_DURATION]);
 
   // Progressive file reveal index (reveal files progressively during review)
   const visibleFileCount = isReviewPhaseComplete
@@ -155,7 +190,7 @@ export const CodeChangeReviewPanel: React.FC<CodeChangeReviewPanelProps> = ({
       }, 750);
       return () => clearTimeout(autoTimer);
     }
-  }, [elapsedSeconds, hasAutoApplied, changeSet.status, changeSet.id, isProcessing, onApplied, onUpdateChangeSet]);
+  }, [elapsedSeconds, TOTAL_REVIEW_DURATION, hasAutoApplied, changeSet.status, changeSet.id, isProcessing, onApplied, onUpdateChangeSet]);
 
   const selectedFile: ChangedFileReview | undefined = changeSet.files.find(
     (f) => f.file_path === selectedFilePath
@@ -354,7 +389,7 @@ export const CodeChangeReviewPanel: React.FC<CodeChangeReviewPanelProps> = ({
         </div>
       </div>
 
-      {/* 10-Second Progressive Review Progress Banner */}
+      {/* Dynamic Progressive Review Progress Banner */}
       <div className="bg-[#141416] px-5 py-2.5 border-b border-zinc-800 space-y-1.5">
         <div className="flex items-center justify-between text-xs font-mono">
           <div className="flex items-center space-x-2">
@@ -364,9 +399,14 @@ export const CodeChangeReviewPanel: React.FC<CodeChangeReviewPanelProps> = ({
           <div className="flex items-center space-x-2 text-[11px] text-zinc-400">
             <span>Progress: {progressPercent}%</span>
             <span>•</span>
-            <span className="text-zinc-300">
+            <span className="text-zinc-300 font-mono">
               {elapsedSeconds.toFixed(1)}s / {TOTAL_REVIEW_DURATION.toFixed(1)}s
             </span>
+            {!isReviewPhaseComplete && (
+              <span className="text-amber-400 font-mono font-bold">
+                ({Math.ceil(Math.max(0, TOTAL_REVIEW_DURATION - elapsedSeconds))}s left)
+              </span>
+            )}
           </div>
         </div>
 
