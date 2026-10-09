@@ -240,14 +240,20 @@ def notify_twilio_voice_call(
         f"</Response>"
     )
 
-    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls.json"
-    auth_header = "Basic " + base64.b64encode(f"{account_sid}:{auth_token}".encode("utf-8")).decode("ascii")
+    voice_url = os.environ.get("TWILIO_VOICE_URL", "").strip()
 
-    form_data = urllib.parse.urlencode({
+    call_params = {
         "To": to_number,
         "From": from_number,
-        "Twiml": twiml_say,
-    }).encode("utf-8")
+    }
+    if voice_url:
+        call_params["Url"] = voice_url
+    else:
+        call_params["Twiml"] = twiml_say
+
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls.json"
+    auth_header = "Basic " + base64.b64encode(f"{account_sid}:{auth_token}".encode("utf-8")).decode("ascii")
+    form_data = urllib.parse.urlencode(call_params).encode("utf-8")
 
     try:
         req = urllib.request.Request(
@@ -290,6 +296,43 @@ def notify_twilio_voice_call(
         except Exception:
             pass
         logger.warning("Twilio HTTP error (%d): %s", http_err.code, err_body or http_err.reason)
+
+        # Trial Account Auto-Fallback: Twilio trial accounts disallow inline 'Twiml' parameter
+        if http_err.code == 400 and ("trial accounts have limited parameter access" in err_body or "disallowed parameters" in err_body):
+            logger.info("Twilio trial account detected (inline Twiml disallowed). Retrying with hosted voice Url parameter...")
+            fallback_url = voice_url or "http://demo.twilio.com/docs/voice.xml"
+            fb_params = urllib.parse.urlencode({
+                "To": to_number,
+                "From": from_number,
+                "Url": fallback_url,
+            }).encode("utf-8")
+            try:
+                fb_req = urllib.request.Request(
+                    url,
+                    data=fb_params,
+                    headers={
+                        "Authorization": auth_header,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "User-Agent": "Agnitia-Bridge-VoiceCaller/1.0",
+                    },
+                )
+                with urllib.request.urlopen(fb_req, timeout=timeout_seconds) as fb_resp:
+                    if fb_resp.getcode() in (200, 201):
+                        fb_body = json.loads(fb_resp.read().decode("utf-8"))
+                        fb_sid = fb_body.get("sid")
+                        logger.info("Twilio trial fallback voice call queued successfully (sid: %s)", fb_sid)
+                        return {
+                            "provider": "twilio_voice",
+                            "accepted": True,
+                            "status": "call_queued",
+                            "call_sid": fb_sid,
+                            "destination": to_number,
+                            "timestamp": now_iso,
+                            "error": None,
+                        }
+            except Exception as fb_exc:
+                logger.warning("Twilio trial fallback call also failed: %s", fb_exc)
+
         return {
             "provider": "twilio_voice",
             "accepted": False,
