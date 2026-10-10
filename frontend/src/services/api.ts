@@ -24,13 +24,14 @@ import type {
 
 const getApiBaseUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) return envUrl;
   if (typeof window !== 'undefined' && window.location?.hostname) {
     const host = window.location.hostname;
     if (host !== 'localhost' && host !== '127.0.0.1') {
       return `http://${host}:8000`;
     }
   }
-  return envUrl || 'http://localhost:8000';
+  return 'http://localhost:8000';
 };
 
 const API_BASE_URL = getApiBaseUrl();
