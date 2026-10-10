@@ -24,6 +24,7 @@ interface HeaderProps {
   onSelectTab: (tab: 'dashboard' | 'demo_store') => void;
   onOpenSOS?: () => void;
   onOpenInjectFault?: () => void;
+  onOpenBackendConfig?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectTab,
   onOpenSOS,
   onOpenInjectFault,
+  onOpenBackendConfig,
 }) => {
 
   const navItems = [
@@ -83,10 +85,10 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             {/* Vertical Divider */}
-            <div className="hidden md:block h-4 w-px bg-stone-700/50" />
+            <div className="hidden xl:block h-4 w-px bg-stone-700/50" />
 
-            {/* Navigation Tabs */}
-            <nav className="hidden md:flex items-center space-x-1 shrink-0">
+            {/* Navigation Tabs (Top row on xl screens, dedicated secondary row on laptops/tablets) */}
+            <nav className="hidden xl:flex items-center space-x-1 shrink-0">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeNav === item.id && activeTab === 'dashboard';
@@ -126,8 +128,9 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Open Fault & Chaos Injection Suite"
                 className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-semibold text-xs uppercase tracking-wide shadow-xs transition cursor-pointer active:scale-95 shrink-0"
               >
-                <Flame className="w-3.5 h-3.5 text-white" />
-                <span>Inject Error</span>
+                <Flame className="w-3.5 h-3.5 text-white shrink-0" />
+                <span className="hidden sm:inline">Inject Error</span>
+                <span className="sm:hidden">Inject</span>
               </button>
             )}
 
@@ -138,13 +141,14 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Trigger Emergency Priority-1 SOS Incident"
                 className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs uppercase tracking-wide shadow-xs transition cursor-pointer active:scale-95 shrink-0"
               >
-                <AlertOctagon className="w-3.5 h-3.5 text-white animate-pulse" />
-                <span>SOS Alert</span>
+                <AlertOctagon className="w-3.5 h-3.5 text-white animate-pulse shrink-0" />
+                <span className="hidden sm:inline">SOS Alert</span>
+                <span className="sm:hidden">SOS</span>
               </button>
             )}
 
             {/* Mode Switcher Pill Group */}
-            <div className="bg-[#261710] p-0.5 rounded-lg border border-stone-800 flex items-center space-x-0.5">
+            <div className="bg-[#261710] p-0.5 rounded-lg border border-stone-800 flex items-center space-x-0.5 shrink-0">
               <button
                 onClick={() => onSelectTab('dashboard')}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center space-x-1.5 transition cursor-pointer ${
@@ -185,27 +189,29 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="hidden sm:block h-4 w-px bg-stone-700/50 mx-0.5" />
 
             {/* Live System Status Indicators */}
-            <div className="flex items-center space-x-2 text-xs font-medium text-stone-300">
-              {/* API Connected Status */}
-              <div
-                className="flex items-center space-x-1.5 bg-[#2A1D15] px-2.5 py-1.5 rounded-lg border border-stone-800"
-                title={backendOnline ? 'API Connected to backend' : 'Backend offline'}
+            <div className="flex items-center space-x-2 text-xs font-medium text-stone-300 shrink-0">
+              {/* API Connected Status - Clickable to open Backend Config Modal */}
+              <button
+                type="button"
+                onClick={onOpenBackendConfig}
+                className="flex items-center space-x-1.5 bg-[#2A1D15] hover:bg-[#38261b] px-2.5 py-1.5 rounded-lg border border-stone-800 transition cursor-pointer text-left shrink-0"
+                title={backendOnline ? 'API Connected to backend (Click to configure)' : 'Backend offline (Click to configure URL or use demo mode)'}
               >
                 <span
-                  className={`w-2 h-2 rounded-full ${
+                  className={`w-2 h-2 rounded-full shrink-0 ${
                     backendOnline ? 'bg-[#4CAF50] animate-pulse' : 'bg-[#D32F2F]'
                   }`}
                 />
-                <span className="font-semibold text-stone-200 hidden sm:inline">
+                <span className="font-semibold text-stone-200 hidden sm:inline text-xs">
                   {backendOnline ? 'Online' : 'Offline'}
                 </span>
-              </div>
+              </button>
 
               {/* Refresh button */}
               <button
                 onClick={onRefresh}
                 title="Refresh telemetry"
-                className="p-1.5 rounded-lg bg-[#2A1D15] hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 transition cursor-pointer"
+                className="p-1.5 rounded-lg bg-[#2A1D15] hover:bg-stone-800 text-stone-300 hover:text-white border border-stone-800 transition cursor-pointer shrink-0"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin text-[#D95A1E]' : ''}`}
@@ -215,8 +221,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Mobile / Tablet Nav Row (Visible when screen is smaller than lg) */}
-        <div className="lg:hidden flex items-center space-x-1 overflow-x-auto py-2 border-t border-stone-800/80 scrollbar-none">
+        {/* Mobile / Tablet / Laptop Secondary Nav Row (Visible when screen is smaller than xl: 1280px) */}
+        <div className="xl:hidden flex items-center space-x-1 overflow-x-auto py-2 border-t border-stone-800/80 scrollbar-none">
           {onOpenInjectFault && (
             <button
               onClick={onOpenInjectFault}

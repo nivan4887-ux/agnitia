@@ -30,7 +30,27 @@ import { SOSTriggerModal } from './components/SOSTriggerModal';
 import { FaultInjectionModal } from './components/FaultInjectionModal';
 import { EmergencyAlarmBanner } from './components/EmergencyAlarmBanner';
 import { DataIntegrityView } from './components/DataIntegrityView';
+import { BackendConfigModal } from './components/BackendConfigModal';
 import { AlertTriangle, XCircle, CheckCircle2, AlertOctagon, Flame, ExternalLink } from 'lucide-react';
+
+const DEFAULT_BASELINE_SERVICES: Record<string, ServiceHealth> = {
+  database: 'healthy',
+  backend_api: 'healthy',
+  order_service: 'healthy',
+  payment_service: 'healthy',
+  website: 'healthy',
+};
+
+const DEFAULT_BASELINE_DEPS: DependenciesResponse = {
+  nodes: ['database', 'backend_api', 'order_service', 'payment_service', 'website'],
+  edges: [
+    { from: 'database', to: 'backend_api' },
+    { from: 'backend_api', to: 'order_service' },
+    { from: 'backend_api', to: 'payment_service' },
+    { from: 'order_service', to: 'website' },
+    { from: 'payment_service', to: 'website' },
+  ],
+};
 
 export const App: React.FC = () => {
   // Navigation State
@@ -44,12 +64,9 @@ export const App: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Core data
-  const [services, setServices] = useState<Record<string, ServiceHealth>>({});
-  const [dependencies, setDependencies] = useState<DependenciesResponse>({
-    nodes: [],
-    edges: [],
-  });
+  // Core data (initialized with baseline topology to prevent UI collapse when offline)
+  const [services, setServices] = useState<Record<string, ServiceHealth>>(DEFAULT_BASELINE_SERVICES);
+  const [dependencies, setDependencies] = useState<DependenciesResponse>(DEFAULT_BASELINE_DEPS);
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<Approval[]>([]);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
@@ -62,6 +79,7 @@ export const App: React.FC = () => {
   const [isExecutingRecovery, setIsExecutingRecovery] = useState<boolean>(false);
   const [isSosModalOpen, setIsSosModalOpen] = useState<boolean>(false);
   const [isFaultModalOpen, setIsFaultModalOpen] = useState<boolean>(false);
+  const [isBackendConfigOpen, setIsBackendConfigOpen] = useState<boolean>(false);
 
   const isMountedRef = useRef(true);
 
@@ -127,9 +145,12 @@ export const App: React.FC = () => {
     } catch (err: any) {
       if (!isMountedRef.current) return;
       setBackendOnline(false);
+      // Retain baseline topology so dashboard does not collapse into an empty state
+      setServices((prev) => (Object.keys(prev).length > 0 ? prev : DEFAULT_BASELINE_SERVICES));
+      setDependencies((prev) => (prev.nodes.length > 0 ? prev : DEFAULT_BASELINE_DEPS));
       if (!isSilent) {
         setErrorMessage(
-          `Unable to connect to BRIDGE backend (${err.message || 'Network Error'}). Make sure FastAPI server is running on port 8000.`
+          `Unable to connect to BRIDGE backend (${err.message || 'Network Error'}). Make sure FastAPI server is running on port 8000 or configure the backend URL.`
         );
       }
     } finally {
@@ -267,14 +288,22 @@ export const App: React.FC = () => {
         {/* Success/Error Alerts */}
         {errorMessage && (
           <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-3">
-            <div className="bg-rose-50 border border-rose-300 rounded-xl p-3 flex items-center justify-between text-xs text-rose-800">
+            <div className="bg-rose-50 border border-rose-300 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 text-xs text-rose-800">
               <div className="flex items-center space-x-2">
                 <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
-              <button onClick={() => setErrorMessage(null)} className="p-1 cursor-pointer">
-                <XCircle className="w-4 h-4 text-rose-500" />
-              </button>
+              <div className="flex items-center space-x-2 shrink-0">
+                <button
+                  onClick={() => setIsBackendConfigOpen(true)}
+                  className="px-2.5 py-1 rounded-md bg-stone-900 hover:bg-stone-800 text-white font-semibold text-[11px] transition cursor-pointer"
+                >
+                  Configure Backend URL
+                </button>
+                <button onClick={() => setErrorMessage(null)} className="p-1 cursor-pointer">
+                  <XCircle className="w-4 h-4 text-rose-500" />
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -340,6 +369,7 @@ export const App: React.FC = () => {
         onSelectTab={setActiveTab}
         onOpenSOS={() => setIsSosModalOpen(true)}
         onOpenInjectFault={() => setIsFaultModalOpen(true)}
+        onOpenBackendConfig={() => setIsBackendConfigOpen(true)}
       />
 
       {/* Main Container */}
@@ -357,17 +387,25 @@ export const App: React.FC = () => {
 
         {/* Alerts Banner Container */}
         {errorMessage && (
-          <div className="mb-5 bg-rose-50 border border-rose-300 rounded-xl p-3.5 flex items-center justify-between shadow-xs animate-in fade-in">
+          <div className="mb-5 bg-rose-50 border border-rose-300 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs animate-in fade-in">
             <div className="flex items-center space-x-3">
               <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
               <p className="text-xs font-medium text-rose-800">{errorMessage}</p>
             </div>
-            <button
-              onClick={() => setErrorMessage(null)}
-              className="text-rose-500 hover:text-rose-800 p-1 cursor-pointer"
-            >
-              <XCircle className="w-4 h-4" />
-            </button>
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                onClick={() => setIsBackendConfigOpen(true)}
+                className="px-3 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-white font-semibold text-xs transition cursor-pointer"
+              >
+                ⚙️ Configure Backend URL
+              </button>
+              <button
+                onClick={() => setErrorMessage(null)}
+                className="text-rose-500 hover:text-rose-800 p-1 cursor-pointer"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
@@ -580,6 +618,22 @@ export const App: React.FC = () => {
           showSuccess(
             `Fault injected: Incident '${newIncident.id}' successfully registered for '${newIncident.failed_service}'.`
           );
+        }}
+      />
+
+      {/* Backend Connection & Latency Config Modal */}
+      <BackendConfigModal
+        isOpen={isBackendConfigOpen}
+        onClose={() => setIsBackendConfigOpen(false)}
+        onSaved={() => {
+          fetchData();
+          showSuccess('Backend connection URL updated! Re-testing telemetry...');
+        }}
+        onEnableDemoMode={() => {
+          setBackendOnline(true);
+          setServices(DEFAULT_BASELINE_SERVICES);
+          setDependencies(DEFAULT_BASELINE_DEPS);
+          showSuccess('Interactive Standalone Demo Mode active.');
         }}
       />
 

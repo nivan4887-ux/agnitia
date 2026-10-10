@@ -23,6 +23,11 @@ async def lifespan(app: FastAPI):
     yield
 
 
+# --- BRIDGE API 500 Route Boundary & Fallback Exception Handler ---
+API_ROUTE_FAULT_FALLBACK_ACTIVE: bool = True
+MAX_CONSECUTIVE_500_CIRCUIT_LIMIT: int = 5
+# -------------------------------------------------------------------
+
 app = FastAPI(
     title="BRIDGE",
     description=(

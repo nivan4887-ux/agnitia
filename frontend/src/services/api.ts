@@ -22,18 +22,60 @@ import type {
   DataIntegrityStatusResponse,
 } from '../types';
 
-const getApiBaseUrl = (): string => {
-  const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (typeof window !== 'undefined' && window.location?.hostname) {
-    const host = window.location.hostname;
-    if (host !== 'localhost' && host !== '127.0.0.1') {
-      return `http://${host}:8000`;
+export const getApiBaseUrl = (): string => {
+  // 1. User-configured override in localStorage
+  if (typeof window !== 'undefined') {
+    const custom = localStorage.getItem('bridge_backend_url');
+    if (custom && custom.trim()) {
+      return custom.trim().replace(/\/+$/, '');
     }
   }
-  return envUrl || 'http://localhost:8000';
+
+  // 2. Vite environment variable
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, '');
+  }
+
+  // 3. Local network IP or localhost
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const host = window.location.hostname;
+    const isIpAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(host);
+    if (isIpAddress && host !== '127.0.0.1') {
+      return `http://${host}:8000`;
+    }
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://localhost:8000';
+    }
+    // Deployed domain (e.g. vercel.app): do not create an illegal http://vercel.app:8000 URL
+    if (host.includes('vercel.app')) {
+      return 'http://localhost:8000';
+    }
+  }
+
+  return 'http://localhost:8000';
 };
 
-const API_BASE_URL = getApiBaseUrl();
+export const setCustomBackendUrl = (url: string | null) => {
+  if (typeof window !== 'undefined') {
+    if (url && url.trim()) {
+      localStorage.setItem('bridge_backend_url', url.trim().replace(/\/+$/, ''));
+    } else {
+      localStorage.removeItem('bridge_backend_url');
+    }
+  }
+};
+
+export const getCustomBackendUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('bridge_backend_url') || '';
+  }
+  return '';
+};
+
+export const API_BASE_URL: { toString: () => string } = {
+  toString: () => getApiBaseUrl(),
+};
 
 // --- BRIDGE Database & Catalog API Resilient Retry Interceptor ---
 export const DB_RECOVERY_RETRY_POLICY = {
@@ -43,6 +85,14 @@ export const DB_RECOVERY_RETRY_POLICY = {
   circuitBreakerThreshold: 5,
 };
 // ------------------------------------------------------------------
+
+// --- BRIDGE API Route Retry & Exponential Backoff Policy ---
+export const API_ROUTE_RETRY_CONFIG = {
+  maxRetries: 3,
+  backoffMultiplier: 1.5,
+  statusCodes: [500, 502, 503, 504],
+};
+// ------------------------------------------------------------
 
 class ApiError extends Error {
   status: number;
