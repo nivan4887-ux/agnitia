@@ -18,8 +18,8 @@ export const CodeChangeReviewModal: React.FC<CodeChangeReviewModalProps> = ({
   if (!changeSet) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 sm:p-6 md:p-10 animate-in fade-in duration-150">
-      <div className="w-full max-w-5xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-2 sm:p-4 md:p-6 animate-in fade-in duration-150 overflow-hidden">
+      <div className="w-full max-w-5xl h-[92vh] max-h-[820px] flex flex-col animate-in zoom-in-95 duration-150 overflow-hidden rounded-2xl shadow-2xl border border-zinc-800">
         <CodeChangeReviewPanel
           changeSet={changeSet}
           onUpdateChangeSet={onUpdateChangeSet}
