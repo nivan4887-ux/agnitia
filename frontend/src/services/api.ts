@@ -94,6 +94,8 @@ export const API_ROUTE_RETRY_CONFIG = {
 };
 // ------------------------------------------------------------
 
+import { mockDispatch } from './mockBackend';
+
 class ApiError extends Error {
   status: number;
   errorCode?: string;
@@ -106,37 +108,51 @@ class ApiError extends Error {
 }
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+    });
 
-  if (!res.ok) {
-    let errorDetail = `Request failed with status ${res.status}`;
-    let errorCode: string | undefined = undefined;
-    try {
-      const errorJson = await res.json();
-      if (errorJson.detail) {
-        if (typeof errorJson.detail === 'string') {
-          errorDetail = errorJson.detail;
-        } else if (typeof errorJson.detail === 'object') {
-          errorDetail = errorJson.detail.error || errorJson.detail.reason || JSON.stringify(errorJson.detail);
-          errorCode = errorJson.detail.error_code;
+    if (!res.ok) {
+      let errorDetail = `Request failed with status ${res.status}`;
+      let errorCode: string | undefined = undefined;
+      try {
+        const errorJson = await res.json();
+        if (errorJson.detail) {
+          if (typeof errorJson.detail === 'string') {
+            errorDetail = errorJson.detail;
+          } else if (typeof errorJson.detail === 'object') {
+            errorDetail = errorJson.detail.error || errorJson.detail.reason || JSON.stringify(errorJson.detail);
+            errorCode = errorJson.detail.error_code;
+          }
+        } else if (errorJson.error) {
+          errorDetail = errorJson.error;
+          errorCode = errorJson.error_code;
         }
-      } else if (errorJson.error) {
-        errorDetail = errorJson.error;
-        errorCode = errorJson.error_code;
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
+      throw new ApiError(errorDetail, res.status, errorCode);
     }
-    throw new ApiError(errorDetail, res.status, errorCode);
-  }
 
-  return res.json();
+    return res.json();
+  } catch (err: any) {
+    // If backend is unreachable or blocked by CORS/Mixed Content (e.g. deployed on Vercel),
+    // seamlessly fall back to the interactive client-side simulation engine so the UI never collapses!
+    if (
+      err instanceof TypeError ||
+      err.message?.includes('fetch') ||
+      err.message?.includes('NetworkError') ||
+      err.message?.includes('Failed to fetch')
+    ) {
+      return (await mockDispatch(url, options)) as T;
+    }
+    throw err;
+  }
 }
 
 export const api = {
